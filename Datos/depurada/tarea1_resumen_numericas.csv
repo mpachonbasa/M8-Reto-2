@@ -1,0 +1,19 @@
+"variable","etiqueta","n","minimo","maximo","mediana","media","sd"
+"agea","Edad",54540,15,103,48,48.31,18.59
+"happy","Felicidad",54228,0,10,8,7.11,2.1
+"sclmeet","Frecuencia de reuniones sociales",54351,1,7,5,4.79,1.63
+"inprdsc","Personas íntimas",53753,0,6,3,2.67,1.44
+"sclact","Actividad social",53116,1,5,3,2.67,0.97
+"pstvms","Estado de ánimo positivo",54275,1,5,2,2.12,0.81
+"fltdpr","Depresión",54294,1,4,1,1.52,0.71
+"slprl","Problemas de sueño",54389,1,4,2,1.79,0.85
+"enjlf","Disfrute de la vida",54011,1,4,3,2.86,0.86
+"fltpcfl","Sentirse capaz",54132,1,4,3,2.79,0.83
+"fltanx","Ansiedad",54131,1,4,2,1.66,0.76
+"dclvlf","Libertad para decidir",54395,1,5,2,1.99,0.9
+"accdng","Logro",54122,1,5,2,2.24,0.86
+"dngval","Valoración",54058,1,5,2,2.06,0.78
+"tmdotwa","Tiempo para uno mismo",54062,0,10,7,6.63,2.23
+"sedirlf","Dirección vital",53598,0,10,7,7,2.2
+"health_num","Salud percibida",54573,1,5,4,3.75,0.94
+"hincfel_num","Percepción ingresos hogar",53977,1,4,3,2.79,0.93

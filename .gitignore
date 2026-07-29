@@ -1,0 +1,12 @@
+# Datos originales
+Datos/*.csv
+Datos/*.sav
+Datos/*.zip
+
+# R / Posit
+.Rproj.user/
+.Rhistory
+.RData
+
+# Resultados grandes
+*.html

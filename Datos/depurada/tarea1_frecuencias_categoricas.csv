@@ -1,0 +1,75 @@
+"gndr","n","porcentaje","variable","icpart1","chldhhe","dvrcdeva","domicil","eisced","mnactic","hincsrca","cntry"
+"Hombre",24929,45.6,"gndr",NA,NA,NA,NA,NA,NA,NA,NA
+"Mujer",29727,54.4,"gndr",NA,NA,NA,NA,NA,NA,NA,NA
+NA,17,0,"gndr",NA,NA,NA,NA,NA,NA,NA,NA
+NA,31857,58.3,"icpart1","Sí",NA,NA,NA,NA,NA,NA,NA
+NA,22603,41.3,"icpart1","No",NA,NA,NA,NA,NA,NA,NA
+NA,213,0.4,"icpart1",NA,NA,NA,NA,NA,NA,NA,NA
+NA,17504,32,"chldhhe",NA,"Sí",NA,NA,NA,NA,NA,NA
+NA,15863,29,"chldhhe",NA,"No",NA,NA,NA,NA,NA,NA
+NA,21306,39,"chldhhe",NA,NA,NA,NA,NA,NA,NA,NA
+NA,7891,14.4,"dvrcdeva",NA,NA,"Sí",NA,NA,NA,NA,NA
+NA,46412,84.9,"dvrcdeva",NA,NA,"No",NA,NA,NA,NA,NA
+NA,370,0.7,"dvrcdeva",NA,NA,NA,NA,NA,NA,NA,NA
+NA,12899,23.6,"domicil",NA,NA,NA,"Gran ciudad",NA,NA,NA,NA
+NA,5682,10.4,"domicil",NA,NA,NA,"Suburbios o afueras",NA,NA,NA,NA
+NA,16882,30.9,"domicil",NA,NA,NA,"Ciudad o pueblo pequeño",NA,NA,NA,NA
+NA,16256,29.7,"domicil",NA,NA,NA,"Pueblo rural",NA,NA,NA,NA
+NA,2808,5.1,"domicil",NA,NA,NA,"Granja o casa en el campo",NA,NA,NA,NA
+NA,146,0.3,"domicil",NA,NA,NA,NA,NA,NA,NA,NA
+NA,5897,10.8,"eisced",NA,NA,NA,NA,"ISCED I",NA,NA,NA
+NA,9819,18,"eisced",NA,NA,NA,NA,"ISCED II",NA,NA,NA
+NA,7353,13.4,"eisced",NA,NA,NA,NA,"ISCED IIIb",NA,NA,NA
+NA,12162,22.2,"eisced",NA,NA,NA,NA,"ISCED IIIa",NA,NA,NA
+NA,7348,13.4,"eisced",NA,NA,NA,NA,"ISCED IV",NA,NA,NA
+NA,5019,9.2,"eisced",NA,NA,NA,NA,"ISCED V1",NA,NA,NA
+NA,6711,12.3,"eisced",NA,NA,NA,NA,"ISCED V2",NA,NA,NA
+NA,364,0.7,"eisced",NA,NA,NA,NA,NA,NA,NA,NA
+NA,25760,47.1,"mnactic",NA,NA,NA,NA,NA,"Trabajo remunerado",NA,NA
+NA,4704,8.6,"mnactic",NA,NA,NA,NA,NA,"Educación",NA,NA
+NA,2978,5.4,"mnactic",NA,NA,NA,NA,NA,"Desempleado busca trabajo",NA,NA
+NA,1155,2.1,"mnactic",NA,NA,NA,NA,NA,"Desempleado no busca trabajo",NA,NA
+NA,1291,2.4,"mnactic",NA,NA,NA,NA,NA,"Enfermo/discapacitado",NA,NA
+NA,12819,23.4,"mnactic",NA,NA,NA,NA,NA,"Jubilado",NA,NA
+NA,90,0.2,"mnactic",NA,NA,NA,NA,NA,"Servicio comunitario/militar",NA,NA
+NA,4796,8.8,"mnactic",NA,NA,NA,NA,NA,"Tareas domésticas/cuidado",NA,NA
+NA,520,1,"mnactic",NA,NA,NA,NA,NA,"Otro",NA,NA
+NA,560,1,"mnactic",NA,NA,NA,NA,NA,NA,NA,NA
+NA,30849,56.4,"hincsrca",NA,NA,NA,NA,NA,NA,"Salarios",NA
+NA,3007,5.5,"hincsrca",NA,NA,NA,NA,NA,NA,"Autónomo",NA
+NA,813,1.5,"hincsrca",NA,NA,NA,NA,NA,NA,"Agricultura",NA
+NA,14196,26,"hincsrca",NA,NA,NA,NA,NA,NA,"Pensiones",NA
+NA,1359,2.5,"hincsrca",NA,NA,NA,NA,NA,NA,"Subsidio desempleo",NA
+NA,1905,3.5,"hincsrca",NA,NA,NA,NA,NA,NA,"Otras ayudas sociales",NA
+NA,299,0.5,"hincsrca",NA,NA,NA,NA,NA,NA,"Ahorros/inversiones",NA
+NA,982,1.8,"hincsrca",NA,NA,NA,NA,NA,NA,"Otras fuentes",NA
+NA,1263,2.3,"hincsrca",NA,NA,NA,NA,NA,NA,NA,NA
+NA,1201,2.2,"cntry",NA,NA,NA,NA,NA,NA,NA,"AL"
+NA,1869,3.4,"cntry",NA,NA,NA,NA,NA,NA,NA,"BE"
+NA,2260,4.1,"cntry",NA,NA,NA,NA,NA,NA,NA,"BG"
+NA,1493,2.7,"cntry",NA,NA,NA,NA,NA,NA,NA,"CH"
+NA,1116,2,"cntry",NA,NA,NA,NA,NA,NA,NA,"CY"
+NA,2009,3.7,"cntry",NA,NA,NA,NA,NA,NA,NA,"CZ"
+NA,2958,5.4,"cntry",NA,NA,NA,NA,NA,NA,NA,"DE"
+NA,1650,3,"cntry",NA,NA,NA,NA,NA,NA,NA,"DK"
+NA,2380,4.4,"cntry",NA,NA,NA,NA,NA,NA,NA,"EE"
+NA,1889,3.5,"cntry",NA,NA,NA,NA,NA,NA,NA,"ES"
+NA,2197,4,"cntry",NA,NA,NA,NA,NA,NA,NA,"FI"
+NA,1968,3.6,"cntry",NA,NA,NA,NA,NA,NA,NA,"FR"
+NA,2286,4.2,"cntry",NA,NA,NA,NA,NA,NA,NA,"GB"
+NA,2014,3.7,"cntry",NA,NA,NA,NA,NA,NA,NA,"HU"
+NA,2628,4.8,"cntry",NA,NA,NA,NA,NA,NA,NA,"IE"
+NA,2508,4.6,"cntry",NA,NA,NA,NA,NA,NA,NA,"IL"
+NA,752,1.4,"cntry",NA,NA,NA,NA,NA,NA,NA,"IS"
+NA,960,1.8,"cntry",NA,NA,NA,NA,NA,NA,NA,"IT"
+NA,2109,3.9,"cntry",NA,NA,NA,NA,NA,NA,NA,"LT"
+NA,1845,3.4,"cntry",NA,NA,NA,NA,NA,NA,NA,"NL"
+NA,1624,3,"cntry",NA,NA,NA,NA,NA,NA,NA,"NO"
+NA,1898,3.5,"cntry",NA,NA,NA,NA,NA,NA,NA,"PL"
+NA,2151,3.9,"cntry",NA,NA,NA,NA,NA,NA,NA,"PT"
+NA,2484,4.5,"cntry",NA,NA,NA,NA,NA,NA,NA,"RU"
+NA,1847,3.4,"cntry",NA,NA,NA,NA,NA,NA,NA,"SE"
+NA,1257,2.3,"cntry",NA,NA,NA,NA,NA,NA,NA,"SI"
+NA,1847,3.4,"cntry",NA,NA,NA,NA,NA,NA,NA,"SK"
+NA,2178,4,"cntry",NA,NA,NA,NA,NA,NA,NA,"UA"
+NA,1295,2.4,"cntry",NA,NA,NA,NA,NA,NA,NA,"XK"

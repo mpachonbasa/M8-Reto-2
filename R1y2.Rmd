@@ -1,0 +1,1092 @@
+---
+title: "modulo8"
+output:
+  pdf_document: default
+  html_document: default
+date: "2026-07-28"
+---
+
+```{r setup, message=FALSE, warning=FALSE}
+paquetes <- c(
+  "dplyr", "readr", "ggplot2", "tidyr",
+  "tibble", "forcats", "scales", "janitor"
+)
+
+paquetes_faltan <- paquetes[!(paquetes %in% installed.packages()[,"Package"])]
+
+if (length(paquetes_faltan) > 0) {
+  install.packages(paquetes_faltan)
+}
+
+library(dplyr)
+library(readr)
+library(ggplot2)
+library(tidyr)
+library(tibble)
+library(forcats)
+library(scales)
+library(janitor)
+```
+
+```{r}
+# 1. Importación de datos
+# Se carga la base original del ESS6.
+estudio <- read_csv("Datos/ESS6e02_7.csv", show_col_types = FALSE)
+
+class(estudio)
+dim(estudio)
+names(estudio)
+```
+
+```{r}
+# 2. Diccionario básico de variables clave
+# Este bloque documenta las variables seleccionadas para el análisis.
+
+diccionario <- tribble(
+  ~variable, ~pregunta, ~categorias,
+  "gndr", "Gender", "1 = Male; 2 = Female; 9 = No answer",
+  "icpart1", "Lives with husband/wife/partner", "1 = Yes; 2 = No; 9 = Not available",
+  "chldhhe", "Ever had children living in household", "1 = Yes; 2 = No; 6 = Not applicable; 7 = Refusal; 8 = Don't know; 9 = No answer",
+  "dvrcdeva", "Ever been divorced/had civil union dissolved", "1 = Yes; 2 = No; 7 = Refusal; 8 = Don't know; 9 = No answer",
+  "domicil", "Domicile, respondent's description", "1 = Big city; 2 = Suburbs/outskirts; 3 = Town/small city; 4 = Country village; 5 = Farm/countryside; 7 = Refusal; 8 = Don't know; 9 = No answer",
+  "eisced", "Highest level of education", "1 to 7 = education levels; 55 = Other; 77 = Refusal; 88 = Don't know; 99 = No answer",
+  "mnactic", "Main activity, last 7 days", "1 = Paid work; 2 = Education; 3 = Unemployed looking; 4 = Unemployed not looking; 5 = Sick/disabled; 6 = Retired; 7 = Service; 8 = Housework/care; 9 = Other; 66 = Not applicable; 77 = Refusal; 88 = Don't know; 99 = No answer",
+  "hincsrca", "Main source of household income", "1 = Wages; 2 = Self-employment; 3 = Farming; 4 = Pensions; 5 = Unemployment benefit; 6 = Other social benefits; 7 = Investments/savings; 8 = Other sources; 77 = Refusal; 88 = Don't know; 99 = No answer",
+  "hincfel", "Feeling about household income nowadays", "1 = Living comfortably; 2 = Coping; 3 = Difficult; 4 = Very difficult; 7 = Refusal; 8 = Don't know; 9 = No answer",
+  "cntry", "Country", "ISO country code"
+)
+
+diccionario
+```
+
+```{r}
+# 3. Exploración inicial de variables clave
+# Se revisan frecuencias y distribución de códigos antes de depurar.
+
+vars_clave <- c("gndr", "icpart1", "chldhhe", "dvrcdeva", "domicil",
+                "eisced", "mnactic", "hincsrca", "hincfel", "cntry")
+
+for (v in vars_clave) {
+  cat("\n============================\n")
+  cat("Variable:", v, "\n")
+  cat("Pregunta:", diccionario$pregunta[diccionario$variable == v], "\n")
+  cat("Categorías:", diccionario$categorias[diccionario$variable == v], "\n\n")
+
+  print(
+    estudio %>%
+      count(.data[[v]]) %>%
+      mutate(porcentaje = round(100 * n / sum(n), 1))
+  )
+}
+```
+
+```{r}
+# 4. Selección y depuración de variables
+# Se conservan solo las variables necesarias y se convierten a NA los códigos perdidos.
+
+vars <- c(
+  "idno","cntry","anweight","happy","sclmeet","inprdsc","sclact","health",
+  "pstvms","fltdpr","slprl","enjlf","fltpcfl","fltanx","dclvlf","accdng",
+  "dngval","tmdotwa","sedirlf","gndr","yrbrn","agea","icpart1","chldhhe",
+  "dvrcdeva","domicil","eisced","mnactic","hincsrca","hincfel"
+)
+
+df_dep <- estudio %>%
+  select(any_of(vars)) %>%
+  mutate(
+    across(c(happy),
+           ~ replace(.x, .x %in% c(77, 88, 99), NA_real_)),
+    across(c(sclmeet),
+           ~ replace(.x, .x %in% c(77, 88, 99), NA_real_)),
+    across(c(sclact, health, pstvms, fltdpr, slprl, enjlf,
+             fltpcfl, fltanx, dclvlf, accdng, dngval, hincfel),
+           ~ replace(.x, .x %in% c(7, 8, 9), NA_real_)),
+    across(c(inprdsc, tmdotwa, sedirlf),
+           ~ replace(.x, .x %in% c(77, 88, 99), NA_real_)),
+    across(c(yrbrn),
+           ~ replace(.x, .x %in% c(7777, 8888, 9999), NA_real_)),
+    across(c(agea),
+           ~ replace(.x, .x %in% c(999), NA_real_)),
+    across(c(gndr, icpart1),
+           ~ replace(.x, .x %in% c(9), NA_real_)),
+    across(c(chldhhe),
+           ~ replace(.x, .x %in% c(6, 7, 8, 9), NA_real_)),
+    across(c(dvrcdeva),
+           ~ replace(.x, .x %in% c(7, 8, 9), NA_real_)),
+    across(c(domicil),
+           ~ replace(.x, .x %in% c(7, 8, 9), NA_real_)),
+    across(c(eisced),
+           ~ replace(.x, .x %in% c(0, 55, 77, 88, 99), NA_real_)),
+    across(c(mnactic),
+           ~ replace(.x, .x %in% c(66, 77, 88, 99), NA_real_)),
+    across(c(hincsrca),
+           ~ replace(.x, .x %in% c(77, 88, 99), NA_real_))
+  )
+
+write_csv(df_dep, "Datos/depurada/estudio_depurado.csv", na = "")
+```
+
+```{r}
+# 5. Recodificación para análisis e interpretación
+# Variables categóricas nominales/ordinales con etiquetas legibles.
+
+df_rec <- df_dep %>%
+  mutate(
+    gndr_num = case_when(
+      gndr == 1 ~ 1,
+      gndr == 2 ~ 2,
+      TRUE ~ NA_real_
+    ),
+    gndr = factor(
+      gndr_num,
+      levels = c(1, 2),
+      labels = c("Hombre", "Mujer")
+    ),
+
+    icpart1_num = case_when(
+      icpart1 == 1 ~ 1,
+      icpart1 == 2 ~ 2,
+      TRUE ~ NA_real_
+    ),
+    icpart1 = factor(
+      icpart1_num,
+      levels = c(1, 2),
+      labels = c("Sí", "No")
+    ),
+
+    chldhhe_num = case_when(
+      chldhhe == 1 ~ 1,
+      chldhhe == 2 ~ 2,
+      TRUE ~ NA_real_
+    ),
+    chldhhe = factor(
+      chldhhe_num,
+      levels = c(1, 2),
+      labels = c("Sí", "No")
+    ),
+
+    dvrcdeva_num = case_when(
+      dvrcdeva == 1 ~ 1,
+      dvrcdeva == 2 ~ 2,
+      TRUE ~ NA_real_
+    ),
+    dvrcdeva = factor(
+      dvrcdeva_num,
+      levels = c(1, 2),
+      labels = c("Sí", "No")
+    ),
+
+    domicil = factor(
+      domicil,
+      levels = 1:5,
+      labels = c(
+        "Gran ciudad",
+        "Suburbios o afueras",
+        "Ciudad o pueblo pequeño",
+        "Pueblo rural",
+        "Granja o casa en el campo"
+      )
+    ),
+
+    eisced = factor(
+      eisced,
+      levels = 1:7,
+      labels = c(
+        "Menos que secundaria inferior",       # 1
+        "Secundaria inferior",                 # 2
+        "Secundaria superior (nivel bajo)",    # 3
+        "Secundaria superior (nivel alto)",    # 4
+        "Formación avanzada / subgrado",       # 5
+        "Terciaria inferior / grado",          # 6
+        "Terciaria superior / máster+"         # 7
+      ),
+      ordered = TRUE
+    ),
+
+    mnactic = factor(
+      mnactic,
+      levels = 1:9,
+      labels = c(
+        "Trabajo remunerado",
+        "Educación",
+        "Desempleado busca trabajo",
+        "Desempleado no busca trabajo",
+        "Enfermo/discapacitado",
+        "Jubilado",
+        "Servicio comunitario/militar",
+        "Tareas domésticas/cuidado",
+        "Otro"
+      )
+    ),
+
+    hincsrca = factor(
+      hincsrca,
+      levels = 1:8,
+      labels = c(
+        "Salarios",
+        "Autónomo",
+        "Agricultura",
+        "Pensiones",
+        "Subsidio desempleo",
+        "Otras ayudas sociales",
+        "Ahorros/inversiones",
+        "Otras fuentes"
+      )
+    ),
+
+    hincfel_num = case_when(
+      hincfel == 1 ~ 4,
+      hincfel == 2 ~ 3,
+      hincfel == 3 ~ 2,
+      hincfel == 4 ~ 1,
+      TRUE ~ NA_real_
+    ),
+
+    health_num = case_when(
+      health == 1 ~ 5,
+      health == 2 ~ 4,
+      health == 3 ~ 3,
+      health == 4 ~ 2,
+      health == 5 ~ 1,
+      TRUE ~ NA_real_
+    ),
+
+    hincfel = factor(
+      hincfel_num,
+      levels = c(1, 2, 3, 4),
+      labels = c("Mucha dificultad", "Dificultad", "Satisface", "Muy satisfecho"),
+      ordered = TRUE
+    ),
+
+    health = factor(
+      health_num,
+      levels = c(1, 2, 3, 4, 5),
+      labels = c("Muy mala", "Mala", "Regular", "Buena", "Muy buena"),
+      ordered = TRUE
+    )
+  )
+```
+
+```{r}
+# 6. Comprobación rápida de la recodificación
+
+table(df_rec$gndr, useNA = "ifany")
+table(df_rec$gndr_num, useNA = "ifany")
+
+table(df_rec$icpart1, useNA = "ifany")
+table(df_rec$icpart1_num, useNA = "ifany")
+
+table(df_rec$chldhhe, useNA = "ifany")
+table(df_rec$chldhhe_num, useNA = "ifany")
+
+table(df_rec$dvrcdeva, useNA = "ifany")
+table(df_rec$dvrcdeva_num, useNA = "ifany")
+```
+
+```{r}
+# 7. Resumen de variables numéricas y ordinales
+
+vars_num <- c(
+  "agea", "happy", "sclmeet", "inprdsc", "sclact",
+  "pstvms", "fltdpr", "slprl", "enjlf", "fltpcfl", "fltanx",
+  "dclvlf", "accdng", "dngval", "tmdotwa", "sedirlf",
+  "health_num", "hincfel_num"
+)
+
+resumen_num <- lapply(vars_num, function(v) {
+  x <- as.numeric(df_rec[[v]])
+  data.frame(
+    variable = v,
+    n = sum(!is.na(x)),
+    minimo = min(x, na.rm = TRUE),
+    maximo = max(x, na.rm = TRUE),
+    mediana = median(x, na.rm = TRUE),
+    media = round(mean(x, na.rm = TRUE), 2),
+    sd = round(sd(x, na.rm = TRUE), 2)
+  )
+}) %>% bind_rows()
+
+resumen_num
+write.csv(resumen_num, "Datos/depurada/tarea1_resumen_numericas.csv", row.names = FALSE)
+```
+
+```{r}
+# 8. Resumen de variables categóricas
+
+vars_cat <- c("gndr", "icpart1", "chldhhe", "dvrcdeva", "domicil",
+              "eisced", "mnactic", "hincsrca", "cntry")
+
+resumen_cat <- lapply(vars_cat, function(v) {
+  x <- df_rec[[v]]
+  data.frame(
+    variable = v,
+    n = sum(!is.na(x)),
+    niveles = dplyr::n_distinct(x, na.rm = TRUE)
+  )
+}) %>% bind_rows()
+
+resumen_cat
+write.csv(resumen_cat, "Datos/depurada/tarea1_resumen_categoricas.csv", row.names = FALSE)
+```
+
+```{r}
+# TAREA 1. EDA bottom-up
+# Descripción, distribuciones, outliers, relaciones y subgrupos
+# ============================================================
+
+# ------------------------------------------------------------
+# 9.0 Paquetes
+# ------------------------------------------------------------
+
+paquetes <- c("dplyr", "tidyr", "ggplot2", "forcats", "scales", "readr", "purrr", "stringr")
+
+instalar <- paquetes[!paquetes %in% installed.packages()[, "Package"]]
+if (length(instalar) > 0) install.packages(instalar)
+
+# Paquetes necesarios
+paquetes <- c(
+  "dplyr", "tidyr", "ggplot2", "forcats",
+  "scales", "readr", "purrr", "stringr"
+)
+
+# Instalar los que falten
+paquetes_faltan <- paquetes[!(paquetes %in% installed.packages()[, "Package"])]
+if (length(paquetes_faltan) > 0) {
+  install.packages(paquetes_faltan)
+}
+
+# Cargar todos
+invisible(lapply(paquetes, library, character.only = TRUE))
+
+# ------------------------------------------------------------
+# 9.1 Tema gráfico global
+# Inspiración: Data-to-Viz / R Graph Gallery
+# ------------------------------------------------------------
+
+theme_set(
+  theme_minimal(base_size = 12) +
+    theme(
+      plot.title = element_text(face = "bold", size = 14, colour = "#1F2A44"),
+      plot.subtitle = element_text(size = 11, colour = "#5B657A"),
+      strip.text = element_text(face = "bold", colour = "#1F2A44"),
+      axis.title = element_text(face = "bold", colour = "#1F2A44"),
+      axis.text = element_text(colour = "#3E4A59"),
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_blank(),
+      legend.position = "right",
+      legend.title = element_text(face = "bold"),
+      plot.title.position = "plot"
+    )
+)
+
+dir.create("Datos/depurada", recursive = TRUE, showWarnings = FALSE)
+dir.create("Graficos", recursive = TRUE, showWarnings = FALSE)
+```
+
+
+
+```{r}
+# ------------------------------------------------------------
+# 9.2 Definición de variables y etiquetas
+# ------------------------------------------------------------
+
+vars_num <- c(
+  "agea", "happy", "sclmeet", "inprdsc", "sclact",
+  "pstvms", "fltdpr", "slprl", "enjlf", "fltpcfl", "fltanx",
+  "dclvlf", "accdng", "dngval", "tmdotwa", "sedirlf",
+  "health_num", "hincfel_num"
+)
+
+vars_cat <- c(
+  "gndr", "icpart1", "chldhhe", "dvrcdeva",
+  "domicil", "eisced", "mnactic", "hincsrca", "cntry"
+)
+
+vars_vd_dashboard_num <- c(
+  "happy", "sclmeet", "inprdsc", "dclvlf",
+  "tmdotwa", "sedirlf", "health_num", "hincfel_num"
+)
+
+etiquetas_num <- c(
+  agea = "Edad",
+  happy = "Felicidad",
+  sclmeet = "Frecuencia de reuniones sociales",
+  inprdsc = "Personas íntimas",
+  sclact = "Actividad social",
+  pstvms = "Estado de ánimo positivo",
+  fltdpr = "Depresión",
+  slprl = "Problemas de sueño",
+  enjlf = "Disfrute de la vida",
+  fltpcfl = "Sentirse capaz",
+  fltanx = "Ansiedad",
+  dclvlf = "Libertad para decidir",
+  accdng = "Logro",
+  dngval = "Valoración",
+  tmdotwa = "Tiempo para uno mismo",
+  sedirlf = "Dirección vital",
+  health_num = "Salud percibida",
+  hincfel_num = "Percepción ingresos hogar"
+)
+
+etiquetas_vi <- c(
+  gndr = "Sexo",
+  icpart1 = "Convivencia en pareja",
+  chldhhe = "Niños en el hogar",
+  dvrcdeva = "Antecedente de divorcio",
+  eisced = "Nivel educativo",
+  hincfel = "Percepción de ingresos del hogar"
+)
+
+df_viz <- df_rec %>%
+  mutate(
+    eisced = factor(
+      eisced,
+      levels = levels(df_rec$eisced),
+      labels = levels(df_rec$eisced),
+      ordered = TRUE
+    )
+  )
+
+```
+
+```{r}
+# 9.3 Resumen descriptivo de variables
+# ------------------------------------------------------------
+
+resumen_num <- lapply(vars_num, function(v) {
+  x <- as.numeric(df_viz[[v]])
+  data.frame(
+    variable = v,
+    etiqueta = etiquetas_num[[v]],
+    n = sum(!is.na(x)),
+    minimo = min(x, na.rm = TRUE),
+    maximo = max(x, na.rm = TRUE),
+    mediana = median(x, na.rm = TRUE),
+    media = round(mean(x, na.rm = TRUE), 2),
+    sd = round(sd(x, na.rm = TRUE), 2)
+  )
+}) %>% bind_rows()
+
+resumen_cat <- lapply(vars_cat, function(v) {
+  x <- df_viz[[v]]
+  data.frame(
+    variable = v,
+    n = sum(!is.na(x)),
+    niveles = dplyr::n_distinct(x, na.rm = TRUE)
+  )
+}) %>% bind_rows()
+
+write.csv(resumen_num, "Datos/depurada/tarea1_resumen_numericas.csv", row.names = FALSE)
+write.csv(resumen_cat, "Datos/depurada/tarea1_resumen_categoricas.csv", row.names = FALSE)
+```
+
+```{r}
+# 9.4 Distribuciones univariadas y outliers
+# ------------------------------------------------------------
+
+df_num_long <- df_viz %>%
+  select(all_of(c("agea", vars_vd_dashboard_num))) %>%
+  pivot_longer(
+    cols = everything(),
+    names_to = "variable",
+    values_to = "valor"
+  ) %>%
+  filter(!is.na(valor)) %>%
+  mutate(
+    variable = recode(variable, !!!etiquetas_num),
+    variable = factor(variable, levels = unname(etiquetas_num[c("agea", vars_vd_dashboard_num)]))
+  )
+
+g_dist <- ggplot(df_num_long, aes(x = valor)) +
+  geom_histogram(
+    bins = 20,
+    fill = "#4C78A8",
+    color = "white",
+    alpha = 0.9
+  ) +
+  facet_wrap(~ variable, scales = "free", ncol = 3) +
+  labs(
+    title = "Distribución de variables numéricas y ordinales resumidas",
+    subtitle = "Exploración de forma, concentración y asimetría",
+    x = "Valor",
+    y = "Frecuencia"
+  )
+
+g_outliers <- ggplot(df_num_long, aes(x = variable, y = valor, fill = variable)) +
+  geom_boxplot(alpha = 0.85, outlier.color = "#E45756", outlier.alpha = 0.25) +
+  coord_flip() +
+  scale_fill_brewer(palette = "Set3") +
+  labs(
+    title = "Valores atípicos y dispersión",
+    subtitle = "Boxplots de variables clave",
+    x = NULL,
+    y = "Valor"
+  ) +
+  theme(legend.position = "none")
+
+g_dist
+g_outliers
+
+ggsave("Graficos/01_distribuciones_clave.png", g_dist, width = 12, height = 8, dpi = 300)
+ggsave("Graficos/02_outliers_clave.png", g_outliers, width = 10, height = 7, dpi = 300)
+```
+
+```{r}
+
+# 9.5 Relación entre edad y bienestar
+
+
+df_edad_bienestar <- df_viz %>%
+  select(
+    agea,
+    all_of(vars_vd_dashboard_num)
+  ) %>%
+  pivot_longer(
+    cols = -agea,
+    names_to = "variable",
+    values_to = "valor"
+  ) %>%
+  filter(
+    !is.na(agea),
+    !is.na(valor)
+  ) %>%
+  mutate(
+    variable = recode(
+      variable,
+      !!!etiquetas_num
+    )
+  )
+
+set.seed(123)
+
+df_edad_bienestar_muestra <- df_edad_bienestar %>%
+  group_by(variable) %>%
+  group_modify(~{
+    n_muestra <- min(3000, nrow(.x))
+    slice_sample(.x, n = n_muestra)
+  }) %>%
+  ungroup()
+
+g_edad_bienestar <- ggplot(
+  df_edad_bienestar_muestra,
+  aes(
+    x = agea,
+    y = valor
+  )
+) +
+  geom_point(
+    alpha = 0.10,
+    color = "#F58518",
+    size = 0.8
+  ) +
+  geom_smooth(
+    method = "loess",
+    se = FALSE,
+    color = "#1F2A44",
+    linewidth = 0.8
+  ) +
+  facet_wrap(
+    ~ variable,
+    scales = "free_y",
+    ncol = 3
+  ) +
+  labs(
+    title = "Relación entre edad e indicadores de bienestar",
+    subtitle = "Dispersión con muestra aleatoria y tendencia suavizada",
+    x = "Edad",
+    y = "Valor"
+  )
+
+g_edad_bienestar
+
+ggsave(
+  "Graficos/03_edad_bienestar.png",
+  g_edad_bienestar,
+  width = 12,
+  height = 8,
+  dpi = 300
+)
+
+```
+
+```{r}
+
+# 9.6 Indicadores de bienestar según nivel educativo (revisar si se repite con lo hecho en 9.8)
+
+vars_bienestar <- c(
+  "happy", "sclmeet", "inprdsc", "dclvlf",
+  "tmdotwa", "sedirlf", "health_num", "hincfel_num"
+)
+
+df_heat_educ <- df_viz %>%
+
+  # ELIMINAR REGISTROS SIN NIVEL EDUCATIVO
+  filter(!is.na(eisced)) %>%
+
+  group_by(eisced) %>%
+
+  summarise(
+    across(
+      all_of(vars_bienestar),
+      ~ mean(.x, na.rm = TRUE)
+    ),
+    .groups = "drop"
+  ) %>%
+
+  pivot_longer(
+    cols = -eisced,
+    names_to = "indicador",
+    values_to = "media"
+  ) %>%
+
+  mutate(
+    indicador = recode(indicador, !!!etiquetas_num)
+  )
+
+ggplot(df_heat_educ,
+       aes(x = indicador,
+           y = eisced,
+           fill = media)) +
+
+  geom_tile(color = "white") +
+
+  geom_text(
+    aes(label = sprintf("%.1f", media)),  # etiquetas numéricas, sin "NA"
+    size = 3
+  ) +
+
+  scale_fill_gradient(
+    low = "#DCEAF6",
+    high = "#2C6DA4",
+    na.value = "white"
+  ) +
+
+  labs(
+    title = "Bienestar medio según nivel educativo",
+    subtitle = "Valores medios por nivel educativo",
+    x = NULL,
+    y = "Nivel educativo",
+    fill = "Media"
+  ) +
+
+  theme(
+    axis.text.x = element_text(
+      angle = 30,
+      hjust = 1
+    ),
+    panel.grid = element_blank()
+  )
+```
+
+```{r}
+
+# 9.7 Funciones auxiliares para subgrupos
+
+
+pal_salud <- c(
+  "Muy mala"  = "#08306B",
+  "Mala"      = "#2171B5",
+  "Regular"   = "#6BAED6",
+  "Buena"     = "#C6DBEF",
+  "Muy buena" = "#DEEBF7"
+)
+
+pal_ingresos <- c(
+  "Mucha dificultad" = "#7F0000",
+  "Dificultad"       = "#D7301F",
+  "Satisface"        = "#FC8D59",
+  "Muy satisfecho"   = "#FEE0D2"
+)
+
+
+# Distribuciones tipo Likert
+
+
+graficar_likert_subgrupo <- function(
+  data,
+  grupo_var,
+  respuesta_var,
+  respuesta_num_var,
+  titulo,
+  xlab,
+  fill_lab,
+  paleta
+) {
+
+  df_plot <- data %>%
+    filter(
+      !is.na(.data[[grupo_var]]),
+      !is.na(.data[[respuesta_var]]),
+      !is.na(.data[[respuesta_num_var]])
+    ) %>%
+    count(.data[[grupo_var]], .data[[respuesta_var]]) %>%
+    group_by(.data[[grupo_var]]) %>%
+    mutate(prop = n / sum(n)) %>%
+    ungroup() %>%
+    left_join(
+      data %>%
+        filter(
+          !is.na(.data[[grupo_var]]),
+          !is.na(.data[[respuesta_num_var]])
+        ) %>%
+        group_by(.data[[grupo_var]]) %>%
+        summarise(
+          media_orden = mean(.data[[respuesta_num_var]], na.rm = TRUE),
+          .groups = "drop"
+        ),
+      by = grupo_var
+    ) %>%
+    mutate(
+      grupo_ordenado = fct_reorder(
+        as.factor(.data[[grupo_var]]),
+        media_orden
+      )
+    )
+
+  ggplot(
+    df_plot,
+    aes(
+      x = grupo_ordenado,
+      y = prop,
+      fill = .data[[respuesta_var]]
+    )
+  ) +
+    geom_col(
+      width = 0.72,
+      colour = "white"
+    ) +
+    scale_y_continuous(labels = percent_format()) +
+    scale_fill_manual(values = paleta) +
+    coord_flip() +
+    labs(
+      title = titulo,
+      subtitle = "Distribución porcentual por subgrupo",
+      x = xlab,
+      y = "Porcentaje",
+      fill = fill_lab
+    )
+}
+
+
+# Heatmaps de perfiles medios
+
+
+graficar_heatmap_perfiles <- function(
+  data,
+  grupo_var,
+  titulo,
+  ylab,
+  variables_resumen
+) {
+
+  resumen <- data %>%
+    filter(!is.na(.data[[grupo_var]])) %>%
+    group_by(.data[[grupo_var]]) %>%
+    summarise(
+      across(
+        all_of(variables_resumen),
+        ~ mean(.x, na.rm = TRUE)
+      ),
+      .groups = "drop"
+    ) %>%
+    pivot_longer(
+      cols = -all_of(grupo_var),
+      names_to = "indicador",
+      values_to = "media"
+    ) %>%
+    filter(!is.na(media)) %>%
+    mutate(
+      indicador = recode(indicador, !!!etiquetas_num)
+    )
+
+  ggplot(
+    resumen,
+    aes(
+      x = indicador,
+      y = .data[[grupo_var]],
+      fill = media
+    )
+  ) +
+    geom_tile(
+      colour = "white",
+      linewidth = 0.6
+    ) +
+    geom_text(
+      aes(label = sprintf("%.1f", media)),
+      size = 3.2,
+      colour = "#1F2A44"
+    ) +
+    scale_fill_gradient(
+      low = "#DCEAF6",
+      high = "#2C6DA4"
+    ) +
+    labs(
+      title = titulo,
+      subtitle = "Perfil medio de variables de bienestar",
+      x = NULL,
+      y = ylab,
+      fill = "Media"
+    ) +
+    theme(
+      axis.text.x = element_text(
+        angle = 30,
+        hjust = 1
+      ),
+      panel.grid = element_blank()
+    )
+}
+```
+
+
+```{r}
+
+# 9.8 Exploración VI -> VD
+
+
+
+# SEXO
+
+
+g_salud_sexo <- graficar_likert_subgrupo(
+  data = df_viz,
+  grupo_var = "gndr",
+  respuesta_var = "health",
+  respuesta_num_var = "health_num",
+  titulo = "Salud percibida según sexo",
+  xlab = "Sexo",
+  fill_lab = "Salud percibida",
+  paleta = pal_salud
+)
+
+g_ingresos_sexo <- graficar_likert_subgrupo(
+  data = df_viz,
+  grupo_var = "gndr",
+  respuesta_var = "hincfel",
+  respuesta_num_var = "hincfel_num",
+  titulo = "Percepción de ingresos según sexo",
+  xlab = "Sexo",
+  fill_lab = "Percepción ingresos",
+  paleta = pal_ingresos
+)
+
+g_heat_sexo <- graficar_heatmap_perfiles(
+  data = df_viz,
+  grupo_var = "gndr",
+  titulo = "Perfil de bienestar según sexo",
+  ylab = "Sexo",
+  variables_resumen = vars_vd_dashboard_num
+)
+
+# PAREJA
+
+
+g_salud_pareja <- graficar_likert_subgrupo(
+  df_viz,
+  "icpart1",
+  "health",
+  "health_num",
+  "Salud percibida según convivencia en pareja",
+  "Convivencia en pareja",
+  "Salud percibida",
+  pal_salud
+)
+
+g_ingresos_pareja <- graficar_likert_subgrupo(
+  df_viz,
+  "icpart1",
+  "hincfel",
+  "hincfel_num",
+  "Percepción de ingresos según convivencia en pareja",
+  "Convivencia en pareja",
+  "Percepción ingresos",
+  pal_ingresos
+)
+
+g_heat_pareja <- graficar_heatmap_perfiles(
+  df_viz,
+  "icpart1",
+  "Perfil de bienestar según convivencia en pareja",
+  "Convivencia en pareja",
+  vars_vd_dashboard_num
+)
+
+
+# HIJOS
+
+
+g_salud_hijos <- graficar_likert_subgrupo(
+  df_viz,
+  "chldhhe",
+  "health",
+  "health_num",
+  "Salud percibida según presencia de niños en el hogar",
+  "Niños en el hogar",
+  "Salud percibida",
+  pal_salud
+)
+
+g_ingresos_hijos <- graficar_likert_subgrupo(
+  df_viz,
+  "chldhhe",
+  "hincfel",
+  "hincfel_num",
+  "Percepción de ingresos según presencia de niños en el hogar",
+  "Niños en el hogar",
+  "Percepción ingresos",
+  pal_ingresos
+)
+
+g_heat_hijos <- graficar_heatmap_perfiles(
+  df_viz,
+  "chldhhe",
+  "Perfil de bienestar según presencia de niños",
+  "Niños en el hogar",
+  vars_vd_dashboard_num
+)
+
+
+# DIVORCIO
+
+
+g_salud_divorcio <- graficar_likert_subgrupo(
+  df_viz,
+  "dvrcdeva",
+  "health",
+  "health_num",
+  "Salud percibida según antecedente de divorcio",
+  "Antecedente de divorcio",
+  "Salud percibida",
+  pal_salud
+)
+
+g_ingresos_divorcio <- graficar_likert_subgrupo(
+  df_viz,
+  "dvrcdeva",
+  "hincfel",
+  "hincfel_num",
+  "Percepción de ingresos según antecedente de divorcio",
+  "Antecedente de divorcio",
+  "Percepción ingresos",
+  pal_ingresos
+)
+
+g_heat_divorcio <- graficar_heatmap_perfiles(
+  df_viz,
+  "dvrcdeva",
+  "Perfil de bienestar según antecedente de divorcio",
+  "Antecedente de divorcio",
+  vars_vd_dashboard_num
+)
+
+# EDUCACIÓN
+
+g_salud_educ <- graficar_likert_subgrupo(
+  df_viz,
+  "eisced",
+  "health",
+  "health_num",
+  "Salud percibida según nivel educativo",
+  "Nivel educativo",
+  "Salud percibida",
+  pal_salud
+)
+
+g_ingresos_educ <- graficar_likert_subgrupo(
+  df_viz,
+  "eisced",
+  "hincfel",
+  "hincfel_num",
+  "Percepción de ingresos según nivel educativo",
+  "Nivel educativo",
+  "Percepción ingresos",
+  pal_ingresos
+)
+
+g_heat_educ <- graficar_heatmap_perfiles(
+  df_viz,
+  "eisced",
+  "Perfil de bienestar según nivel educativo",
+  "Nivel educativo",
+  vars_vd_dashboard_num
+)
+
+# INGRESOS COMO VARIABLE INDEPENDIENTE
+
+
+g_salud_ingresos <- graficar_likert_subgrupo(
+  df_viz,
+  "hincfel",
+  "health",
+  "health_num",
+  "Salud percibida según ingresos del hogar",
+  "Percepción ingresos hogar",
+  "Salud percibida",
+  pal_salud
+)
+
+g_heat_ingresos <- graficar_heatmap_perfiles(
+  df_viz,
+  "hincfel",
+  "Perfil de bienestar según ingresos del hogar",
+  "Percepción ingresos hogar",
+  setdiff(vars_vd_dashboard_num, "hincfel_num")
+)
+```
+
+```{r}
+
+# 9.9 Mostrar y guardar gráficas
+
+
+graficos_lista <- list(
+
+  g_salud_sexo = g_salud_sexo,
+  g_ingresos_sexo = g_ingresos_sexo,
+  g_heat_sexo = g_heat_sexo,
+
+  g_salud_pareja = g_salud_pareja,
+  g_ingresos_pareja = g_ingresos_pareja,
+  g_heat_pareja = g_heat_pareja,
+
+  g_salud_hijos = g_salud_hijos,
+  g_ingresos_hijos = g_ingresos_hijos,
+  g_heat_hijos = g_heat_hijos,
+
+  g_salud_divorcio = g_salud_divorcio,
+  g_ingresos_divorcio = g_ingresos_divorcio,
+  g_heat_divorcio = g_heat_divorcio,
+
+  g_salud_educ = g_salud_educ,
+  g_ingresos_educ = g_ingresos_educ,
+  g_heat_educ = g_heat_educ,
+
+  g_salud_ingresos = g_salud_ingresos,
+  g_heat_ingresos = g_heat_ingresos
+)
+
+# Mostrar todas las gráficas
+
+walk(
+  graficos_lista,
+  print
+)
+
+# Guardar todas las gráficas
+
+walk2(
+  .x = graficos_lista,
+  .y = names(graficos_lista),
+  .f = ~ ggsave(
+    filename = file.path(
+      "Graficos",
+      paste0(.y, ".png")
+    ),
+    plot = .x,
+    width = 12,
+    height = 8,
+    dpi = 300
+  )
+)
+
+```
+
