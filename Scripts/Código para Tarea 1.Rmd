@@ -1,23 +1,27 @@
 ---
-title: "modulo8"
+title: "Módulo 8 - ESS6 bienestar subjetivo Tarea 1"
+author: "Mónica Pachón Basallo"
+date: "2026-07-28"
 output:
   pdf_document: default
-  html_document: default
-date: "2026-07-28"
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: cosmo
 ---
-
-```{r setup, message=FALSE, warning=FALSE}
-paquetes <- c(
-  "dplyr", "readr", "ggplot2", "tidyr",
-  "tibble", "forcats", "scales", "janitor"
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 8,
+  fig.height = 6,
+  fig.align = "center"
 )
+```
 
-paquetes_faltan <- paquetes[!(paquetes %in% installed.packages()[,"Package"])]
-
-if (length(paquetes_faltan) > 0) {
-  install.packages(paquetes_faltan)
-}
-
+```{r paquetes, echo=FALSE}
 library(dplyr)
 library(readr)
 library(ggplot2)
@@ -26,21 +30,25 @@ library(tibble)
 library(forcats)
 library(scales)
 library(janitor)
+library(purrr)
+library(stringr)
 ```
 
+# Importación de datos
+
+Se carga la base original del ESS6 y se realizan algunas comprobaciones iniciales de estructura.
+
 ```{r}
-# 1. Importación de datos
-# Se carga la base original del ESS6.
 estudio <- read_csv("Datos/ESS6e02_7.csv", show_col_types = FALSE)
 
 class(estudio)
 dim(estudio)
 names(estudio)
 ```
-
-```{r}
 # 2. Diccionario básico de variables clave
-# Este bloque documenta las variables seleccionadas para el análisis.
+
+Este bloque documenta las variables seleccionadas para el análisis.
+```{r}
 
 diccionario <- tribble(
   ~variable, ~pregunta, ~categorias,
@@ -59,9 +67,11 @@ diccionario <- tribble(
 diccionario
 ```
 
-```{r}
 # 3. Exploración inicial de variables clave
-# Se revisan frecuencias y distribución de códigos antes de depurar.
+Se revisan frecuencias y distribución de códigos antes de depurar.
+
+```{r}
+
 
 vars_clave <- c("gndr", "icpart1", "chldhhe", "dvrcdeva", "domicil",
                 "eisced", "mnactic", "hincsrca", "hincfel", "cntry")
@@ -80,9 +90,11 @@ for (v in vars_clave) {
 }
 ```
 
-```{r}
 # 4. Selección y depuración de variables
-# Se conservan solo las variables necesarias y se convierten a NA los códigos perdidos.
+Se conservan solo las variables necesarias y se convierten a NA los códigos perdidos.
+
+```{r}
+
 
 vars <- c(
   "idno","cntry","anweight","happy","sclmeet","inprdsc","sclact","health",
@@ -126,9 +138,10 @@ df_dep <- estudio %>%
 write_csv(df_dep, "Datos/depurada/estudio_depurado.csv", na = "")
 ```
 
-```{r}
 # 5. Recodificación para análisis e interpretación
-# Variables categóricas nominales/ordinales con etiquetas legibles.
+Variables categóricas nominales/ordinales con etiquetas legibles.
+
+```{r}
 
 df_rec <- df_dep %>%
   mutate(
@@ -283,8 +296,8 @@ table(df_rec$dvrcdeva, useNA = "ifany")
 table(df_rec$dvrcdeva_num, useNA = "ifany")
 ```
 
-```{r}
 # 7. Resumen de variables numéricas y ordinales
+```{r}
 
 vars_num <- c(
   "agea", "happy", "sclmeet", "inprdsc", "sclact",
@@ -310,8 +323,8 @@ resumen_num
 write.csv(resumen_num, "Datos/depurada/tarea1_resumen_numericas.csv", row.names = FALSE)
 ```
 
-```{r}
 # 8. Resumen de variables categóricas
+```{r}
 
 vars_cat <- c("gndr", "icpart1", "chldhhe", "dvrcdeva", "domicil",
               "eisced", "mnactic", "hincsrca", "cntry")
@@ -329,40 +342,10 @@ resumen_cat
 write.csv(resumen_cat, "Datos/depurada/tarea1_resumen_categoricas.csv", row.names = FALSE)
 ```
 
-```{r}
-# TAREA 1. EDA bottom-up
-# Descripción, distribuciones, outliers, relaciones y subgrupos
-# ============================================================
+## 9.1 Configuración gráfica
 
-# ------------------------------------------------------------
-# 9.0 Paquetes
-# ------------------------------------------------------------
 
-paquetes <- c("dplyr", "tidyr", "ggplot2", "forcats", "scales", "readr", "purrr", "stringr")
-
-instalar <- paquetes[!paquetes %in% installed.packages()[, "Package"]]
-if (length(instalar) > 0) install.packages(instalar)
-
-# Paquetes necesarios
-paquetes <- c(
-  "dplyr", "tidyr", "ggplot2", "forcats",
-  "scales", "readr", "purrr", "stringr"
-)
-
-# Instalar los que falten
-paquetes_faltan <- paquetes[!(paquetes %in% installed.packages()[, "Package"])]
-if (length(paquetes_faltan) > 0) {
-  install.packages(paquetes_faltan)
-}
-
-# Cargar todos
-invisible(lapply(paquetes, library, character.only = TRUE))
-
-# ------------------------------------------------------------
-# 9.1 Tema gráfico global
-# Inspiración: Data-to-Viz / R Graph Gallery
-# ------------------------------------------------------------
-
+```{r eda-config, include=FALSE}
 theme_set(
   theme_minimal(base_size = 12) +
     theme(
@@ -382,6 +365,8 @@ theme_set(
 dir.create("Datos/depurada", recursive = TRUE, showWarnings = FALSE)
 dir.create("Graficos", recursive = TRUE, showWarnings = FALSE)
 ```
+
+
 
 
 
