@@ -19,9 +19,9 @@ knitr::opts_chunk$set(
 
 # Introducción
 
-La reproducibilidad constituye uno de los principios fundamentales de la ciencia de datos. Este proyecto utiliza datos de la European Social Survey (ESS Round 6) para analizar la relación entre bienestar subjetivo y diferentes características sociodemográficas, familiares y económicas.
+La reproducibilidad constituye uno de los principios fundamentales de la ciencia de datos. Este proyecto utiliza datos de la European Social Survey (ESS Round 6) para analizar cómo diferentes factores sociodemográficos, familiares y económicos se relacionan con el bienestar subjetivo de la población europea.
 
-Los datos han sido sometidos a un proceso reproducible de selección, limpieza y recodificación mediante scripts de R.
+El análisis se centra en diversas dimensiones del bienestar, incluyendo felicidad, salud percibida, relaciones sociales, autonomía personal y sentido vital. Los datos han sido sometidos a un proceso reproducible de selección, limpieza y recodificación mediante scripts desarrollados en R.
 
 # Objetivos
 
@@ -35,19 +35,22 @@ Analizar la relación entre distintos factores sociodemográficos, familiares y 
 2. Analizar la relación entre nivel educativo y bienestar subjetivo.
 3. Analizar la relación entre percepción de ingresos y bienestar subjetivo.
 4. Comparar indicadores de bienestar entre distintos grupos sociales.
-5. Generar productos reproducibles para comunicar resultados.
+5. Identificar las variables de mayor interés para el desarrollo del dashboard final.
+6. Generar productos reproducibles para comunicar resultados.
 
 # Datos y metodología
 
-Los datos proceden de la European Social Survey Round 6.
+Los datos proceden de la European Social Survey Round 6 (ESS6), una encuesta multinacional realizada en diversos países europeos.
 
-Para el desarrollo del proyecto se realizaron las siguientes tareas:
+Para el desarrollo del proyecto se llevaron a cabo las siguientes tareas:
 
-- Selección de variables relevantes para el estudio.
+- Selección de variables relevantes para el estudio del bienestar subjetivo.
 - Tratamiento de valores perdidos.
-- Recodificación de variables.
-- Construcción de indicadores para análisis y visualización.
+- Recodificación de variables categóricas y ordinales.
+- Construcción de indicadores auxiliares para el análisis.
 - Elaboración de productos reproducibles mediante R Markdown.
+
+La base utilizada en este informe procede del script de limpieza y preparación de datos desarrollado para el proyecto y constituye la fuente común utilizada posteriormente en el dashboard y la presentación final.
 
 # Carga de datos
 
@@ -56,6 +59,7 @@ library(dplyr)
 library(readr)
 library(ggplot2)
 library(knitr)
+library(tidyr)
 
 df <- read_csv(
   "../Datos/depurada/base_final_reto2.csv",
@@ -72,6 +76,8 @@ La edad media observada es de **`r round(mean(df$agea, na.rm = TRUE),1)`** años
 La felicidad media registrada es de **`r round(mean(df$happy, na.rm = TRUE),2)`** puntos sobre una escala de 0 a 10.
 
 # Estadísticos descriptivos de felicidad
+
+La felicidad constituye el principal indicador sintético de bienestar subjetivo utilizado en este estudio.
 
 ```{r}
 resumen_happy <- df %>%
@@ -90,9 +96,24 @@ kable(
 )
 ```
 
-# Bienestar subjetivo e ingresos
+Los resultados muestran niveles relativamente elevados de bienestar subjetivo en la muestra analizada.
 
-La percepción económica del hogar constituye una de las dimensiones más relevantes para comprender el bienestar subjetivo.
+# Principales hallazgos del análisis exploratorio
+
+El análisis exploratorio realizado en la Tarea 1 permitió identificar cuáles son los factores más estrechamente asociados con las distintas dimensiones del bienestar subjetivo.
+
+Los resultados muestran que las diferencias más consistentes aparecen asociadas a dos variables principales:
+
+- La percepción de ingresos del hogar.
+- El nivel educativo.
+
+Por el contrario, variables como el sexo, la presencia de hijos en el hogar o los antecedentes de divorcio muestran diferencias más moderadas y resultan especialmente útiles como mecanismos de segmentación y filtrado.
+
+# Bienestar subjetivo y situación económica
+
+La percepción económica del hogar constituye el factor que presenta la asociación más clara con los indicadores de bienestar analizados.
+
+A medida que mejora la valoración de la situación económica doméstica aumentan los niveles medios de felicidad, salud percibida y autonomía personal.
 
 ```{r}
 tabla_ingresos <- df %>%
@@ -112,34 +133,86 @@ kable(
 )
 ```
 
-Los resultados muestran diferencias apreciables entre grupos económicos en distintos indicadores relacionados con el bienestar subjetivo.
+# Perfil de bienestar según percepción económica
 
-# Felicidad media según percepción económica
+La siguiente visualización resume simultáneamente distintas dimensiones del bienestar subjetivo y permite observar el gradiente asociado a la percepción económica del hogar.
 
 ```{r}
-df %>%
+vars_bienestar <- c(
+  "happy",
+  "sclmeet",
+  "inprdsc",
+  "dclvlf",
+  "tmdotwa",
+  "sedirlf",
+  "health_num"
+)
+
+etiquetas <- c(
+  happy = "Felicidad",
+  sclmeet = "Relaciones sociales",
+  inprdsc = "Personas cercanas",
+  dclvlf = "Libertad para decidir",
+  tmdotwa = "Tiempo para uno mismo",
+  sedirlf = "Dirección vital",
+  health_num = "Salud percibida"
+)
+
+df_heat_ingresos <- df %>%
   filter(!is.na(hincfel)) %>%
   group_by(hincfel) %>%
   summarise(
-    felicidad_media = mean(happy, na.rm = TRUE)
+    across(
+      all_of(vars_bienestar),
+      ~ mean(.x, na.rm = TRUE)
+    ),
+    .groups = "drop"
   ) %>%
-  ggplot(
-    aes(
-      x = hincfel,
-      y = felicidad_media
-    )
+  pivot_longer(
+    cols = -hincfel,
+    names_to = "indicador",
+    values_to = "media"
+  ) %>%
+  mutate(
+    indicador = recode(indicador, !!!etiquetas)
+  )
+
+ggplot(
+  df_heat_ingresos,
+  aes(
+    x = indicador,
+    y = hincfel,
+    fill = media
+  )
+) +
+  geom_tile(color = "white") +
+  geom_text(
+    aes(label = round(media, 1)),
+    size = 3
   ) +
-  geom_col(fill = "#4C78A8") +
+  scale_fill_gradient(
+    low = "#DCEAF6",
+    high = "#2C6DA4"
+  ) +
   labs(
-    title = "Felicidad media según percepción económica",
-    x = "Percepción económica del hogar",
-    y = "Felicidad media"
+    title = "Perfil de bienestar según ingresos del hogar",
+    x = NULL,
+    y = "Percepción económica",
+    fill = "Media"
+  ) +
+  theme(
+    axis.text.x = element_text(
+      angle = 30,
+      hjust = 1
+    )
   )
 ```
 
-# Bienestar subjetivo y educación
+# Bienestar subjetivo y nivel educativo
 
-El nivel educativo constituye otro de los factores potencialmente asociados al bienestar subjetivo.
+El nivel educativo constituye el segundo gran factor explicativo identificado durante el análisis exploratorio.
+
+Los niveles educativos más elevados presentan sistemáticamente mejores resultados en felicidad, salud percibida, integración social y autonomía personal.
 
 ```{r}
 tabla_educacion <- df %>%
@@ -159,41 +232,112 @@ kable(
 )
 ```
 
-# Felicidad media según nivel educativo
+# Perfil de bienestar según nivel educativo
+
+La siguiente visualización resume el perfil medio de bienestar para los distintos niveles educativos.
 
 ```{r}
-df %>%
+df_heat_educ <- df %>%
   filter(!is.na(eisced)) %>%
   group_by(eisced) %>%
   summarise(
-    felicidad_media = mean(happy, na.rm = TRUE)
+    across(
+      all_of(vars_bienestar),
+      ~ mean(.x, na.rm = TRUE)
+    ),
+    .groups = "drop"
   ) %>%
-  ggplot(
-    aes(
-      x = eisced,
-      y = felicidad_media
-    )
+  pivot_longer(
+    cols = -eisced,
+    names_to = "indicador",
+    values_to = "media"
+  ) %>%
+  mutate(
+    indicador = recode(indicador, !!!etiquetas)
+  )
+
+ggplot(
+  df_heat_educ,
+  aes(
+    x = indicador,
+    y = eisced,
+    fill = media
+  )
+) +
+  geom_tile(color = "white") +
+  geom_text(
+    aes(label = round(media, 1)),
+    size = 3
   ) +
-  geom_col(fill = "#54A24B") +
+  scale_fill_gradient(
+    low = "#DCEAF6",
+    high = "#2C6DA4"
+  ) +
   labs(
-    title = "Felicidad media según nivel educativo",
-    x = "Nivel educativo",
-    y = "Felicidad media"
+    title = "Perfil de bienestar según nivel educativo",
+    x = NULL,
+    y = "Nivel educativo",
+    fill = "Media"
   ) +
   theme(
     axis.text.x = element_text(
-      angle = 35,
+      angle = 30,
       hjust = 1
     )
   )
 ```
 
+# Variables contextuales consideradas
+
+Además de la educación y la situación económica, el análisis exploró diversas variables sociodemográficas y familiares.
+
+| Variable | Resultado observado | Papel previsto en el dashboard |
+|-----------|-----------|-----------|
+| Sexo | Diferencias limitadas entre grupos | Filtro secundario |
+| Convivencia en pareja | Asociación moderada con bienestar | Filtro relevante |
+| Presencia de hijos | Diferencias moderadas | Filtro contextual |
+| Antecedente de divorcio | Diferencias moderadas y sistemáticas | Filtro contextual |
+| Nivel educativo | Gradiente claro y consistente | Variable principal |
+| Percepción de ingresos | Gradiente muy marcado | Variable principal |
+
+Las diferencias más relevantes se concentran en los ejes económico y educativo. Las variables familiares y sociodemográficas aportan información complementaria y enriquecen la interpretación de los resultados.
+
+# Variables seleccionadas para el dashboard
+
+A partir de los resultados obtenidos durante el análisis exploratorio se seleccionaron las variables que constituirán la base del dashboard interactivo.
+
+## Indicadores de bienestar
+
+- Felicidad global.
+- Salud percibida.
+- Dirección vital.
+- Libertad para decidir.
+- Tiempo para uno mismo.
+- Frecuencia de reuniones sociales.
+- Red de apoyo íntimo.
+
+## Variables explicativas principales
+
+- Percepción de ingresos del hogar.
+- Nivel educativo.
+
+## Variables de filtrado y segmentación
+
+- Sexo.
+- Edad.
+- Convivencia en pareja.
+- Presencia de hijos.
+- Antecedente de divorcio.
+- País de residencia.
+
 # Conclusiones
 
-La muestra analizada presenta niveles relativamente elevados de bienestar subjetivo.
+El análisis exploratorio confirma la existencia de desigualdades significativas en bienestar subjetivo asociadas a factores socioeconómicos.
 
-La percepción económica muestra una asociación clara con los indicadores de bienestar, observándose valores medios superiores entre quienes manifiestan una situación económica más favorable.
+La percepción de ingresos del hogar constituye el factor más estrechamente relacionado con las diferencias observadas en felicidad, salud percibida, autonomía personal y propósito vital.
 
-Asimismo, el nivel educativo presenta diferencias en los niveles medios de felicidad y salud percibida, lo que justifica análisis posteriores más detallados.
+El nivel educativo presenta asimismo un gradiente positivo consistente en la mayoría de indicadores analizados.
 
-Este informe constituye un producto reproducible generado mediante R Markdown y servirá como base para el desarrollo del dashboard interactivo y de la presentación final del proyecto.
+Las variables familiares y sociodemográficas muestran asociaciones más moderadas y se consideran especialmente útiles como mecanismos de segmentación y exploración complementaria.
+
+Los resultados obtenidos proporcionan una base sólida para el desarrollo del dashboard del proyecto, orientado a explorar desigualdades en bienestar subjetivo mediante herramientas de visualización reproducible.
