@@ -1,0 +1,539 @@
+---
+title: "Bienestar subjetivo y desigualdades sociales (ESS6)"
+output:
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(shiny)
+library(dplyr)
+library(readr)
+library(ggplot2)
+library(tibble)
+library(scales)
+library(gridExtra)
+library(tidyr)
+
+df <- read_csv(
+  "Datos/depurada/base_final_reto2.csv",
+  show_col_types = FALSE
+)
+```
+
+```{r}
+datos_filtrados <- reactive({
+
+  datos <- df
+
+  if(input$sexo != "Todos"){
+    datos <- datos %>%
+      filter(as.character(gndr) == input$sexo)
+  }
+
+  if(input$pareja != "Todos"){
+    datos <- datos %>%
+      filter(as.character(icpart1) == input$pareja)
+  }
+
+  if(input$hijos != "Todos"){
+    datos <- datos %>%
+      filter(as.character(chldhhe) == input$hijos)
+  }
+
+  if(input$divorcio != "Todos"){
+    datos <- datos %>%
+      filter(as.character(dvrcdeva) == input$divorcio)
+  }
+
+  if(input$pais != "Todos"){
+    datos <- datos %>%
+      filter(cntry == input$pais)
+  }
+
+  datos
+})
+```
+
+Sidebar {.sidebar}
+=======================================================================
+
+### Filtros
+
+```{r}
+selectInput(
+  "sexo",
+  "Sexo",
+  choices = c(
+    "Todos",
+    sort(na.omit(unique(as.character(df$gndr))))
+  ),
+  selected = "Todos"
+)
+
+selectInput(
+  "pareja",
+  "Convivencia en pareja",
+  choices = c(
+    "Todos",
+    sort(na.omit(unique(as.character(df$icpart1))))
+  ),
+  selected = "Todos"
+)
+
+selectInput(
+  "hijos",
+  "Hijos en el hogar",
+  choices = c(
+    "Todos",
+    sort(na.omit(unique(as.character(df$chldhhe))))
+  ),
+  selected = "Todos"
+)
+
+selectInput(
+  "divorcio",
+  "Antecedente de divorcio",
+  choices = c(
+    "Todos",
+    sort(na.omit(unique(as.character(df$dvrcdeva))))
+  ),
+  selected = "Todos"
+)
+
+selectInput(
+  "pais",
+  "País",
+  choices = c(
+    "Todos",
+    sort(unique(as.character(df$cntry)))
+  ),
+  selected = "Todos"
+)
+```
+
+### Participantes
+
+```{r}
+renderValueBox({
+
+  datos <- datos_filtrados()
+
+  valueBox(
+    nrow(datos),
+    "Participantes"
+  )
+})
+
+```
+
+### Felicidad media
+
+```{r}
+renderValueBox({
+
+  datos <- datos_filtrados()
+
+  valueBox(
+    paste0(
+      round(mean(datos$happy, na.rm = TRUE), 2),
+      " 😊"
+    ),
+    "Felicidad media (0-10)"
+  )
+
+})
+```
+
+Row
+=======================================================================
+### Perfil medio de bienestar
+
+**Perfil de bienestar del grupo seleccionado.**
+
+Las circunferencias muestran la puntuación media observada en relación con el valor máximo posible de cada indicador.
+
+
+```{r}
+renderPlot({
+
+  datos <- datos_filtrados()
+
+  perfil <- data.frame(
+    indicador = c(
+      "Salud",
+      "Dirección vital",
+      "Libertad",
+      "Tiempo libre",
+      "Apoyo íntimo",
+      "Relaciones"
+    ),
+    valor = c(
+      mean(datos$health_num, na.rm = TRUE),
+      mean(datos$sedirlf, na.rm = TRUE),
+      mean(datos$dclvlf, na.rm = TRUE),
+      mean(datos$tmdotwa, na.rm = TRUE),
+      mean(datos$inprdsc, na.rm = TRUE),
+      mean(datos$sclmeet, na.rm = TRUE)
+    ),
+    maximo = c(
+      5,
+      10,
+      5,
+      10,
+      6,
+      7
+    ),
+    color = c(
+      "#59A14F",
+      "#4E79A7",
+      "#E15759",
+      "#76B7B2",
+      "#B07AA1",
+      "#EDC948"
+    )
+  )
+
+  donuts <- lapply(
+    seq_len(nrow(perfil)),
+    function(i){
+
+      proporcion <- perfil$valor[i] / perfil$maximo[i]
+
+      datos_donut <- data.frame(
+        grupo = c("valor","resto"),
+        valor = c(
+          proporcion,
+          1 - proporcion
+        )
+      )
+
+      ggplot(
+        datos_donut,
+        aes(
+          x = 1.5,
+          y = valor,
+          fill = grupo
+        )
+      ) +
+        geom_col(
+          width = 0.85,
+          colour = NA
+        ) +
+        coord_polar(
+          theta = "y",
+          start = pi/2
+        ) +
+        xlim(0.6, 2.0) +
+        scale_fill_manual(
+          values = c(
+            perfil$color[i],
+            scales::alpha(
+              perfil$color[i],
+              0.15
+            )
+          )
+        ) +
+        labs(
+          title = perfil$indicador[i],
+          subtitle = paste0(
+            round(perfil$valor[i], 1),
+            " / ",
+            perfil$maximo[i]
+          )
+        ) +
+        theme_void() +
+        theme(
+          legend.position = "none",
+
+          plot.background = element_rect(
+            fill = "#FAFAFA",
+            colour = NA
+          ),
+
+          plot.title = element_text(
+            hjust = 0.5,
+            face = "bold",
+            size = 13
+          ),
+
+          plot.subtitle = element_text(
+            hjust = 0.5,
+            size = 12,
+            face = "bold",
+            colour = "#444444"
+          ),
+
+          plot.margin = margin(
+            15,
+            35,
+            35,
+            35
+          )
+        )
+
+    }
+  )
+
+  gridExtra::grid.arrange(
+    grobs = donuts,
+    ncol = 2
+  )
+
+})
+```
+
+Row
+=======================================================================
+
+### Bienestar según ingresos del hogar
+
+**¿Cómo se relaciona la situación económica con el bienestar?**
+
+Cada celda representa la puntuación media de un indicador. Los tonos más oscuros indican valores medios más elevados.
+
+```{r}
+renderPlot({
+
+
+  datos <- datos_filtrados()
+
+  indicadores <- c(
+    "happy",
+    "health_num",
+    "sedirlf",
+    "dclvlf",
+    "inprdsc",
+    "sclmeet"
+  )
+
+  etiquetas <- c(
+    happy = "Felicidad",
+    health_num = "Salud",
+    sedirlf = "Dirección vital",
+    dclvlf = "Libertad",
+    inprdsc = "Apoyo íntimo",
+    sclmeet = "Relaciones"
+  )
+
+  heatmap_ingresos <- datos %>%
+    filter(!is.na(hincfel)) %>%
+    group_by(hincfel) %>%
+    summarise(
+      across(
+        all_of(indicadores),
+        ~ mean(.x, na.rm = TRUE)
+      ),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      hincfel = factor(
+        hincfel,
+        levels = c(
+          "Mucha dificultad",
+          "Dificultad",
+          "Satisface",
+          "Muy satisfecho"
+        )
+      )
+    ) %>%
+    pivot_longer(
+      cols = -hincfel,
+      names_to = "indicador",
+      values_to = "media"
+    ) %>%
+    mutate(
+      indicador = recode(indicador, !!!etiquetas)
+    )
+
+  ggplot(
+    heatmap_ingresos,
+    aes(
+      x = indicador,
+      y = hincfel,
+      fill = media
+    )
+  ) +
+    geom_tile(
+      colour = "white"
+    ) +
+    geom_text(
+      aes(
+        label = round(media, 1)
+      ),
+      size = 5
+    ) +
+    scale_fill_gradient(
+      low = "#E8F1FA",
+      high = "#2C6DA4"
+    ) +
+    labs(
+      x = NULL,
+      y = NULL,
+      fill = "Media"
+    ) +
+    theme_minimal() +
+    theme(
+      panel.grid = element_blank(),
+      axis.text.x = element_text(
+        angle = 20,
+        hjust = 1,
+        size = 12
+      ),
+      axis.text.y = element_text(
+      size = 12
+),
+      plot.title = element_text(
+        face = "bold"
+      )
+    )
+
+}, height = 550)
+```
+
+Row
+=======================================================================
+
+### Bienestar según nivel educativo
+
+**¿Existen diferencias de bienestar según el nivel educativo alcanzado?**
+
+Cada celda representa la puntuación media observada para cada indicador. Los tonos más oscuros indican niveles medios más altos.
+
+
+
+```{r}
+renderPlot({
+
+  datos <- datos_filtrados()
+
+  indicadores <- c(
+    "happy",
+    "health_num",
+    "sedirlf",
+    "dclvlf",
+    "inprdsc",
+    "sclmeet"
+  )
+
+  etiquetas <- c(
+    happy = "Felicidad",
+    health_num = "Salud",
+    sedirlf = "Dirección vital",
+    dclvlf = "Libertad",
+    inprdsc = "Apoyo íntimo",
+    sclmeet = "Relaciones"
+  )
+
+  heatmap_educ <- datos %>%
+    filter(!is.na(eisced)) %>%
+    group_by(eisced) %>%
+    summarise(
+      across(
+        all_of(indicadores),
+        ~ mean(.x, na.rm = TRUE)
+      ),
+      .groups = "drop"
+    ) %>%
+    pivot_longer(
+      cols = -eisced,
+      names_to = "indicador",
+      values_to = "media"
+    ) %>%
+    mutate(
+      indicador = recode(indicador, !!!etiquetas)
+    )
+
+  ggplot(
+    heatmap_educ,
+    aes(
+      x = indicador,
+      y = eisced,
+      fill = media
+    )
+  ) +
+    geom_tile(
+      colour = "white"
+    ) +
+    geom_text(
+      aes(
+        label = round(media, 1)
+      ),
+      size = 5
+    ) +
+    scale_fill_gradient(
+      low = "#FCE8E6",
+      high = "#D04A35"
+    ) +
+    labs(
+      x = NULL,
+      y = NULL,
+      fill = "Media"
+    ) +
+    theme_minimal() +
+    theme(
+      panel.grid = element_blank(),
+      axis.text.x = element_text(
+        angle = 20,
+        hjust = 1,
+        size = 12
+      ),
+      axis.text.y = element_text(
+        size = 12
+      )
+    )
+
+}, height = 550)
+```
+
+Row
+=======================================================================
+
+### Bienestar a lo largo de la edad
+
+**¿Cómo evoluciona el bienestar durante el ciclo vital?**
+
+La línea suavizada permite identificar patrones generales asociados a la edad en el grupo seleccionado.
+
+```{r}
+renderPlot({
+
+  datos <- datos_filtrados() %>%
+    filter(
+      !is.na(agea),
+      !is.na(happy)
+    )
+
+  ggplot(
+    datos,
+    aes(
+      x = agea,
+      y = happy
+    )
+  ) +
+    geom_point(
+      alpha = 0.03,
+      size = 0.8,
+      colour = "#4C78A8"
+    ) +
+    geom_smooth(
+      method = "gam",
+      formula = y ~ s(x),
+      se = FALSE,
+      colour = "#D04A35",
+      linewidth = 1.4
+    ) +
+    labs(
+      x = "Edad (años)",
+      y = "Felicidad (0-10)"
+    ) +
+    theme_minimal() +
+    theme(
+      panel.grid.minor = element_blank()
+    )
+
+}, height = 500)
+```
