@@ -1,5 +1,5 @@
 ---
-title: "Informe técnico ESS6 Bienestar Subjetivo"
+title: "Informe técnico ESS6: Bienestar subjetivo en Europa"
 author: "Mónica Pachón Basallo"
 date: "`r Sys.Date()`"
 output:
@@ -19,21 +19,35 @@ knitr::opts_chunk$set(
 
 # Introducción
 
-Este informe presenta un análisis descriptivo del bienestar subjetivo utilizando los datos de la European Social Survey (ESS Round 6).
+La reproducibilidad constituye uno de los principios fundamentales de la ciencia de datos. Este proyecto utiliza datos de la European Social Survey (ESS Round 6) para analizar la relación entre bienestar subjetivo y diferentes características sociodemográficas, familiares y económicas.
+
+Los datos han sido sometidos a un proceso reproducible de selección, limpieza y recodificación mediante scripts de R.
 
 # Objetivos
 
 ## Objetivo general
 
-Analizar la relación entre distintos factores sociodemográficos, familiares y económicos y el bienestar subjetivo en Europa.
+Analizar la relación entre distintos factores sociodemográficos, familiares y económicos y el bienestar subjetivo de la población europea.
 
 ## Objetivos específicos
 
-1. Describir los niveles de bienestar subjetivo.
-2. Analizar la relación entre educación y bienestar.
-3. Analizar la relación entre ingresos percibidos y bienestar.
-4. Comparar indicadores de bienestar según características sociodemográficas.
-5. Elaborar productos reproducibles para la comunicación de resultados.
+1. Describir los niveles de bienestar subjetivo de la muestra.
+2. Analizar la relación entre nivel educativo y bienestar subjetivo.
+3. Analizar la relación entre percepción de ingresos y bienestar subjetivo.
+4. Comparar indicadores de bienestar entre distintos grupos sociales.
+5. Generar productos reproducibles para comunicar resultados.
+
+# Datos y metodología
+
+Los datos proceden de la European Social Survey Round 6.
+
+Para el desarrollo del proyecto se realizaron las siguientes tareas:
+
+- Selección de variables relevantes para el estudio.
+- Tratamiento de valores perdidos.
+- Recodificación de variables.
+- Construcción de indicadores para análisis y visualización.
+- Elaboración de productos reproducibles mediante R Markdown.
 
 # Carga de datos
 
@@ -41,43 +55,145 @@ Analizar la relación entre distintos factores sociodemográficos, familiares y 
 library(dplyr)
 library(readr)
 library(ggplot2)
+library(knitr)
 
 df <- read_csv(
-  "../Datos/depurada/estudio_recodificado.csv",
+  "../Datos/depurada/base_final_reto2.csv",
   show_col_types = FALSE
 )
-
 ```
 
-# Tamaño de la muestra
+# Descripción de la muestra
 
-La base de datos contiene **`r nrow(df)`** observaciones y **`r ncol(df)`** variables.
+La base final contiene **`r format(nrow(df), big.mark = ".")`** observaciones y **`r ncol(df)`** variables.
+
+La edad media observada es de **`r round(mean(df$agea, na.rm = TRUE),1)`** años.
+
+La felicidad media registrada es de **`r round(mean(df$happy, na.rm = TRUE),2)`** puntos sobre una escala de 0 a 10.
 
 # Estadísticos descriptivos de felicidad
 
 ```{r}
-df %>%
+resumen_happy <- df %>%
   summarise(
-    Media = mean(happy, na.rm = TRUE),
+    Casos = sum(!is.na(happy)),
+    Media = round(mean(happy, na.rm = TRUE), 2),
     Mediana = median(happy, na.rm = TRUE),
-    Desv_Tipica = sd(happy, na.rm = TRUE)
+    Desv_Tipica = round(sd(happy, na.rm = TRUE), 2),
+    Minimo = min(happy, na.rm = TRUE),
+    Maximo = max(happy, na.rm = TRUE)
+  )
+
+kable(
+  resumen_happy,
+  caption = "Estadísticos descriptivos de felicidad"
+)
+```
+
+# Bienestar subjetivo e ingresos
+
+La percepción económica del hogar constituye una de las dimensiones más relevantes para comprender el bienestar subjetivo.
+
+```{r}
+tabla_ingresos <- df %>%
+  filter(!is.na(hincfel)) %>%
+  group_by(hincfel) %>%
+  summarise(
+    Participantes = n(),
+    Felicidad_media = round(mean(happy, na.rm = TRUE), 2),
+    Salud_media = round(mean(health_num, na.rm = TRUE), 2),
+    Libertad_media = round(mean(dclvlf, na.rm = TRUE), 2),
+    .groups = "drop"
+  )
+
+kable(
+  tabla_ingresos,
+  caption = "Indicadores medios según percepción económica"
+)
+```
+
+Los resultados muestran diferencias apreciables entre grupos económicos en distintos indicadores relacionados con el bienestar subjetivo.
+
+# Felicidad media según percepción económica
+
+```{r}
+df %>%
+  filter(!is.na(hincfel)) %>%
+  group_by(hincfel) %>%
+  summarise(
+    felicidad_media = mean(happy, na.rm = TRUE)
+  ) %>%
+  ggplot(
+    aes(
+      x = hincfel,
+      y = felicidad_media
+    )
+  ) +
+  geom_col(fill = "#4C78A8") +
+  labs(
+    title = "Felicidad media según percepción económica",
+    x = "Percepción económica del hogar",
+    y = "Felicidad media"
   )
 ```
 
-# Distribución de la felicidad
+# Bienestar subjetivo y educación
+
+El nivel educativo constituye otro de los factores potencialmente asociados al bienestar subjetivo.
 
 ```{r}
-ggplot(df, aes(x = happy)) +
-  geom_histogram(binwidth = 1) +
+tabla_educacion <- df %>%
+  filter(!is.na(eisced)) %>%
+  group_by(eisced) %>%
+  summarise(
+    Participantes = n(),
+    Felicidad_media = round(mean(happy, na.rm = TRUE), 2),
+    Salud_media = round(mean(health_num, na.rm = TRUE), 2),
+    Libertad_media = round(mean(dclvlf, na.rm = TRUE), 2),
+    .groups = "drop"
+  )
+
+kable(
+  tabla_educacion,
+  caption = "Indicadores medios según nivel educativo"
+)
+```
+
+# Felicidad media según nivel educativo
+
+```{r}
+df %>%
+  filter(!is.na(eisced)) %>%
+  group_by(eisced) %>%
+  summarise(
+    felicidad_media = mean(happy, na.rm = TRUE)
+  ) %>%
+  ggplot(
+    aes(
+      x = eisced,
+      y = felicidad_media
+    )
+  ) +
+  geom_col(fill = "#54A24B") +
   labs(
-    title = "Distribución de la felicidad",
-    x = "Nivel de felicidad",
-    y = "Frecuencia"
+    title = "Felicidad media según nivel educativo",
+    x = "Nivel educativo",
+    y = "Felicidad media"
+  ) +
+  theme(
+    axis.text.x = element_text(
+      angle = 35,
+      hjust = 1
+    )
   )
 ```
 
 # Conclusiones
 
-La distribución observada permite obtener una visión general de los niveles de bienestar subjetivo de la muestra estudiada.
+La muestra analizada presenta niveles relativamente elevados de bienestar subjetivo.
 
-Este informe servirá como punto de partida para análisis posteriores y para el desarrollo del dashboard interactivo.
+La percepción económica muestra una asociación clara con los indicadores de bienestar, observándose valores medios superiores entre quienes manifiestan una situación económica más favorable.
+
+Asimismo, el nivel educativo presenta diferencias en los niveles medios de felicidad y salud percibida, lo que justifica análisis posteriores más detallados.
+
+Este informe constituye un producto reproducible generado mediante R Markdown y servirá como base para el desarrollo del dashboard interactivo y de la presentación final del proyecto.

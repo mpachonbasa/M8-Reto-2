@@ -4,6 +4,10 @@
 # Autora: Mónica Pachón Basallo
 # =====================================================
 
+# NOTA:
+# Las recodificaciones utilizadas en este script
+# reproducen exactamente las aplicadas en
+# "Código para Tarea 1.Rmd".
 # -----------------------------------------------------
 # 1. Carga de paquetes
 # -----------------------------------------------------
@@ -40,9 +44,6 @@ glimpse(estudio)
 
 dim(estudio)
 
-# -----------------------------------------------------
-# 3. Selección de variables de interés
-# -----------------------------------------------------
 
 # -----------------------------------------------------
 # 3. Selección de variables de interés
@@ -96,9 +97,6 @@ glimpse(df_dep)
 
 dim(df_dep)
 
-# -----------------------------------------------------
-# 4. Limpieza de valores perdidos
-# -----------------------------------------------------
 
 # -----------------------------------------------------
 # 4. Limpieza de valores perdidos
@@ -394,16 +392,13 @@ dim(df_rec)
 # 6. Exportación de la base final
 # -----------------------------------------------------
 
-# La base depurada se guardará para ser utilizada
-# posteriormente por:
-#
-# - Dashboard
-# - Informe técnico
-# - Presentación
+# Esta base constituye la fuente oficial de datos
+# para el informe técnico, el dashboard y la
+# presentación del proyecto.
 
 write_csv(
   df_rec,
-  "Datos/depurada/ess6_dashboard.csv",
+  "Datos/depurada/base_final_reto2.csv",
   na = ""
 )
 
