@@ -1,0 +1,83 @@
+---
+title: "Informe técnico ESS6 Bienestar Subjetivo"
+author: "Mónica Pachón Basallo"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+# Introducción
+
+Este informe presenta un análisis descriptivo del bienestar subjetivo utilizando los datos de la European Social Survey (ESS Round 6).
+
+# Objetivos
+
+## Objetivo general
+
+Analizar la relación entre distintos factores sociodemográficos, familiares y económicos y el bienestar subjetivo en Europa.
+
+## Objetivos específicos
+
+1. Describir los niveles de bienestar subjetivo.
+2. Analizar la relación entre educación y bienestar.
+3. Analizar la relación entre ingresos percibidos y bienestar.
+4. Comparar indicadores de bienestar según características sociodemográficas.
+5. Elaborar productos reproducibles para la comunicación de resultados.
+
+# Carga de datos
+
+```{r}
+library(dplyr)
+library(readr)
+library(ggplot2)
+
+df <- read_csv(
+  "../Datos/depurada/estudio_recodificado.csv",
+  show_col_types = FALSE
+)
+
+```
+
+# Tamaño de la muestra
+
+La base de datos contiene **`r nrow(df)`** observaciones y **`r ncol(df)`** variables.
+
+# Estadísticos descriptivos de felicidad
+
+```{r}
+df %>%
+  summarise(
+    Media = mean(happy, na.rm = TRUE),
+    Mediana = median(happy, na.rm = TRUE),
+    Desv_Tipica = sd(happy, na.rm = TRUE)
+  )
+```
+
+# Distribución de la felicidad
+
+```{r}
+ggplot(df, aes(x = happy)) +
+  geom_histogram(binwidth = 1) +
+  labs(
+    title = "Distribución de la felicidad",
+    x = "Nivel de felicidad",
+    y = "Frecuencia"
+  )
+```
+
+# Conclusiones
+
+La distribución observada permite obtener una visión general de los niveles de bienestar subjetivo de la muestra estudiada.
+
+Este informe servirá como punto de partida para análisis posteriores y para el desarrollo del dashboard interactivo.
