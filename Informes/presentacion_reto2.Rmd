@@ -1,0 +1,187 @@
+---
+title: "Bienestar subjetivo y desigualdades sociales (ESS6)"
+author: "Mónica Pachón Basallo"
+date: "`r Sys.Date()`"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE
+)
+
+library(dplyr)
+library(readr)
+library(ggplot2)
+library(tidyr)
+
+df <- read_csv(
+  "../Datos/depurada/base_final_reto2.csv",
+  show_col_types = FALSE
+)
+```
+
+## Introducción
+
+- Proyecto basado en la European Social Survey (ESS6).
+- Se analizan distintas dimensiones del bienestar subjetivo.
+- El objetivo es estudiar la relación entre bienestar, ingresos, educación y características sociodemográficas.
+
+## Objetivos
+
+**Objetivo general**
+
+Analizar la relación entre factores sociodemográficos, familiares y económicos y el bienestar subjetivo de la población europea.
+
+**Objetivos específicos**
+
+- Describir los niveles de bienestar.
+- Analizar diferencias según ingresos.
+- Analizar diferencias según educación.
+- Comparar grupos sociales.
+- Identificar factores asociados al bienestar.
+
+## Descripción de la muestra
+
+- Base de datos: European Social Survey (ESS6).
+- Cobertura: 29 países europeos.
+- Más de 50.000 participantes.
+- Variable principal: felicidad subjetiva (0-10).
+- Indicadores complementarios: salud, dirección vital, libertad para decidir, relaciones sociales, apoyo íntimo y tiempo propio.
+
+## Distribución de felicidad
+
+```{r}
+ggplot(df, aes(x = happy)) +
+  geom_histogram(
+    binwidth = 1,
+    fill = "#4C78A8",
+    color = "white"
+  ) +
+  scale_x_continuous(breaks = 0:10) +
+  labs(
+    title = "Distribución de felicidad",
+    x = "Felicidad",
+    y = "Frecuencia"
+  ) +
+  theme_minimal()
+```
+
+## Bienestar según percepción económica
+
+```{r}
+indicadores <- c(
+  "happy",
+  "health_num",
+  "sedirlf",
+  "dclvlf",
+  "inprdsc",
+  "sclmeet"
+)
+
+etiquetas <- c(
+  happy = "Felicidad",
+  health_num = "Salud",
+  sedirlf = "Dirección vital",
+  dclvlf = "Libertad",
+  inprdsc = "Apoyo íntimo",
+  sclmeet = "Relaciones"
+)
+
+heatmap_ingresos <- df %>%
+  filter(!is.na(hincfel)) %>%
+  group_by(hincfel) %>%
+  summarise(
+    across(
+      all_of(indicadores),
+      ~ mean(.x, na.rm = TRUE)
+    ),
+    .groups = "drop"
+  ) %>%
+  pivot_longer(
+    cols = -hincfel,
+    names_to = "indicador",
+    values_to = "media"
+  ) %>%
+  mutate(
+    indicador = recode(indicador, !!!etiquetas)
+  )
+
+ggplot(
+  heatmap_ingresos,
+  aes(
+    x = indicador,
+    y = hincfel,
+    fill = media
+  )
+) +
+  geom_tile(colour = "white") +
+  geom_text(
+    aes(label = round(media, 1)),
+    size = 4
+  ) +
+  scale_fill_gradient(
+    low = "#E8F1FA",
+    high = "#2C6DA4"
+  ) +
+  labs(
+    title = "Perfil de bienestar según ingresos",
+    x = NULL,
+    y = NULL
+  )
+```
+
+## Bienestar según nivel educativo
+
+```{r}
+heatmap_educ <- df %>%
+  filter(!is.na(eisced)) %>%
+  group_by(eisced) %>%
+  summarise(
+    across(
+      all_of(indicadores),
+      ~ mean(.x, na.rm = TRUE)
+    ),
+    .groups = "drop"
+  ) %>%
+  pivot_longer(
+    cols = -eisced,
+    names_to = "indicador",
+    values_to = "media"
+  ) %>%
+  mutate(
+    indicador = recode(indicador, !!!etiquetas)
+  )
+
+ggplot(
+  heatmap_educ,
+  aes(
+    x = indicador,
+    y = as.factor(eisced),
+    fill = media
+  )
+) +
+  geom_tile(colour = "white") +
+  geom_text(
+    aes(label = round(media, 1)),
+    size = 4
+  ) +
+  scale_fill_gradient(
+    low = "#FCE8E6",
+    high = "#D04A35"
+  ) +
+  labs(
+    title = "Perfil de bienestar según educación",
+    x = NULL,
+    y = "Nivel educativo"
+  )
+```
+
+## Conclusiones
+
+- Los ingresos muestran la asociación más fuerte con el bienestar subjetivo.
+- La educación presenta una relación positiva consistente.
+- Existen desigualdades sociales relevantes en distintas dimensiones del bienestar.
+- El dashboard desarrollado permite explorar estos patrones de forma reproducible e interactiva.
