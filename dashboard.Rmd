@@ -140,6 +140,7 @@ renderValueBox({
   valueBox(
     paste0(
       round(mean(datos$happy, na.rm = TRUE), 2),
+      " / 10",
       " 😊"
     ),
     "Felicidad media (0-10)"
@@ -556,11 +557,13 @@ renderPlot({
 }, height = 500)
 ```
 
-
 Comparación entre grupos
 =======================================================================
 
-### Comparación
+Row {data-height=250}
+-----------------------------------------------------------------------
+
+### Comparación y descripción de los grupos
 
 ```{r}
 selectInput(
@@ -575,13 +578,8 @@ selectInput(
 )
 ```
 
-Row
------------------------------------------------------------------------
-
-### Grupos comparados
-
 ```{r}
-renderText({
+renderUI({
 
   variable <- switch(
     input$comparacion,
@@ -591,23 +589,80 @@ renderText({
     "Antecedente de divorcio" = "dvrcdeva"
   )
 
-  grupos <- na.omit(
-    unique(
-      as.character(df[[variable]])
+  datos <- df %>%
+    filter(!is.na(.data[[variable]]))
+
+  resumen <- datos %>%
+    group_by(.data[[variable]]) %>%
+    summarise(
+      Participantes = n(),
+      Edad = round(mean(agea, na.rm = TRUE), 1),
+      Felicidad = round(mean(happy, na.rm = TRUE), 2),
+      Salud = round(mean(health_num, na.rm = TRUE), 2),
+      .groups = "drop"
     )
-  )
 
   validate(
     need(
-      length(grupos) == 2,
-      "No se han detectado exactamente dos grupos."
+      nrow(resumen) == 2,
+      "La comparación requiere exactamente dos grupos."
     )
   )
 
-  paste(
-    grupos[1],
-    "vs",
-    grupos[2]
+  grupo1 <- as.character(resumen[[1]][1])
+  grupo2 <- as.character(resumen[[1]][2])
+
+  HTML(
+    paste0(
+
+      "<div style='display:flex;
+                    justify-content:space-around;
+                    margin-top:15px;'>",
+
+      "<div>",
+
+      "<h4>", grupo1, "</h4>",
+
+      "<b>Participantes:</b> ",
+      resumen$Participantes[1],
+      "<br>",
+
+      "<b>Edad media:</b> ",
+      resumen$Edad[1],
+      "<br>",
+
+      "<b>Felicidad:</b> ",
+      resumen$Felicidad[1],
+      "<br>",
+
+      "<b>Salud:</b> ",
+      resumen$Salud[1],
+
+      "</div>",
+
+      "<div>",
+
+      "<h4>", grupo2, "</h4>",
+
+      "<b>Participantes:</b> ",
+      resumen$Participantes[2],
+      "<br>",
+
+      "<b>Edad media:</b> ",
+      resumen$Edad[2],
+      "<br>",
+
+      "<b>Felicidad:</b> ",
+      resumen$Felicidad[2],
+      "<br>",
+
+      "<b>Salud:</b> ",
+      resumen$Salud[2],
+
+      "</div>",
+
+      "</div>"
+    )
   )
 
 })
@@ -673,22 +728,28 @@ renderPlot({
 
   resultados <- tibble(
     indicador = c(
-      "Felicidad",
-      "Salud",
-      "Dirección vital",
-      "Libertad",
-      "Apoyo íntimo",
-      "Relaciones"
-    ),
-    d = c(
-      cohens_d(datos$happy, datos[[variable]]),
-      cohens_d(datos$health_num, datos[[variable]]),
-      cohens_d(datos$sedirlf, datos[[variable]]),
-      cohens_d(datos$dclvlf, datos[[variable]]),
-      cohens_d(datos$inprdsc, datos[[variable]]),
-      cohens_d(datos$sclmeet, datos[[variable]])
-    )
+  "Felicidad",
+  "Salud",
+  "Dirección vital",
+  "Libertad",
+  "Apoyo íntimo",
+  "Relaciones",
+  "Ingresos",
+  "Tiempo propio"
+),
+
+d = c(
+  cohens_d(datos$happy, datos[[variable]]),
+  cohens_d(datos$health_num, datos[[variable]]),
+  cohens_d(datos$sedirlf, datos[[variable]]),
+  cohens_d(datos$dclvlf, datos[[variable]]),
+  cohens_d(datos$inprdsc, datos[[variable]]),
+  cohens_d(datos$sclmeet, datos[[variable]]),
+  cohens_d(datos$hincfel_num, datos[[variable]]),
+  cohens_d(datos$tmdotwa, datos[[variable]])
+)
   ) %>%
+    filter(!is.na(d)) %>%
     mutate(
       interpretacion = case_when(
         d < 0.20 ~ "Trivial",
@@ -737,5 +798,169 @@ renderPlot({
       legend.position = "bottom"
     )
 
-}, height = 450)
+}, height = 300)
 ```
+
+Conclusiones
+=======================================================================
+
+Row
+-----------------------------------------------------------------------
+
+### Factores asociados al bienestar
+
+**¿Qué factores muestran una asociación más fuerte con la dimensión de bienestar seleccionada?**
+
+El gráfico resume los resultados de una regresión múltiple que considera simultáneamente edad, sexo, convivencia en pareja, hijos, divorcio, nivel educativo e ingresos.
+
+Los puntos muestran la magnitud relativa de la asociación entre cada factor y la dimensión de bienestar seleccionada.
+
+Lo más importante es comparar la posición de los factores dentro del ranking: cuanto más a la derecha aparece un factor, mayor es su asociación con el indicador analizado.
+
+**Seleccione una dimensión de bienestar para identificar qué factores muestran una asociación más intensa.**
+
+```{r}
+selectInput(
+  "vd_conclusion",
+  "Indicador de bienestar",
+  choices = c(
+    "Felicidad" = "happy",
+    "Salud" = "health_num",
+    "Dirección vital" = "sedirlf",
+    "Libertad" = "dclvlf",
+    "Apoyo íntimo" = "inprdsc",
+    "Relaciones" = "sclmeet",
+    "Tiempo propio" = "tmdotwa"
+  )
+)
+```
+
+```{r}
+renderPlot({
+
+  datos <- df %>%
+    select(
+      all_of(input$vd_conclusion),
+      agea,
+      gndr,
+      icpart1,
+      chldhhe,
+      dvrcdeva,
+      eisced,
+      hincfel
+    ) %>%
+    na.omit()
+
+  names(datos)[1] <- "vd"
+
+  modelo <- lm(
+    vd ~
+      agea +
+      gndr +
+      icpart1 +
+      chldhhe +
+      dvrcdeva +
+      eisced +
+      hincfel,
+    data = datos
+  )
+
+  r2 <- round(summary(modelo)$r.squared, 3)
+
+  betas <- summary(modelo)$coefficients
+
+  resultados <- tibble(
+    variable = rownames(betas),
+    coeficiente = abs(betas[,1])
+  ) %>%
+    filter(variable != "(Intercept)") %>%
+    mutate(
+      factor = case_when(
+        grepl("agea", variable) ~ "Edad",
+        grepl("gndr", variable) ~ "Sexo",
+        grepl("icpart1", variable) ~ "Pareja",
+        grepl("chldhhe", variable) ~ "Hijos",
+        grepl("dvrcdeva", variable) ~ "Divorcio",
+        grepl("eisced", variable) ~ "Educación",
+        grepl("hincfel", variable) ~ "Ingresos",
+        TRUE ~ variable
+      )
+    ) %>%
+    group_by(factor) %>%
+    summarise(
+      efecto = max(coeficiente),
+      .groups = "drop"
+    ) %>%
+    arrange(efecto)
+
+  ggplot(
+    resultados,
+    aes(
+      x = efecto,
+      y = reorder(factor, efecto)
+    )
+  ) +
+
+    geom_segment(
+      aes(
+        x = 0,
+        xend = efecto,
+        y = factor,
+        yend = factor
+      ),
+      colour = "#BDBDBD",
+      linewidth = 1.2
+    ) +
+
+    geom_point(
+      colour = "#2C6DA4",
+      size = 5
+    ) +
+
+    geom_text(
+      aes(
+        label = round(efecto, 2)
+      ),
+      hjust = -0.3,
+      size = 5
+    ) +
+
+    coord_cartesian(
+      xlim = c(
+        0,
+        max(resultados$efecto) * 1.25
+      )
+    ) +
+
+    labs(
+      x = "Magnitud relativa de la asociación",
+      y = NULL,
+      subtitle = paste0(
+        "Capacidad explicativa del modelo (R² = ",
+        r2,
+        ")"
+      )
+    ) +
+
+    theme_minimal() +
+
+    theme(
+      axis.text = element_text(size = 12),
+      panel.grid.major.y = element_blank(),
+      panel.grid.minor = element_blank(),
+      plot.subtitle = element_text(
+        size = 11,
+        face = "italic"
+      )
+    )
+
+}, height = 400)
+```
+
+
+
+
+
+
+
+
