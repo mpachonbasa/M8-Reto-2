@@ -19,7 +19,7 @@ library(gridExtra)
 library(tidyr)
 
 df <- read_csv(
-  "Datos/depurada/base_final_reto2.csv",
+  "../Datos/depurada/base_final_reto2.csv",
   show_col_types = FALSE
 )
 ```

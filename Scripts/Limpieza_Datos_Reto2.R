@@ -1,13 +1,13 @@
-# =====================================================
+
 # MÓDULO 8 - RETO 2
 # Limpieza y preparación de datos
 # Autora: Mónica Pachón Basallo
-# =====================================================
+
 
 # NOTA:
 # Las recodificaciones utilizadas en este script
 # reproducen exactamente las aplicadas en
-# "Código para Tarea 1.Rmd".
+# "Código para el Reto 1.Rmd".
 # -----------------------------------------------------
 # 1. Carga de paquetes
 # -----------------------------------------------------
@@ -407,3 +407,4 @@ write_csv(
 cat("Base depurada exportada correctamente.\n")
 cat("Observaciones:", nrow(df_rec), "\n")
 cat("Variables:", ncol(df_rec), "\n")
+
