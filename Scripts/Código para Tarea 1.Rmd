@@ -3,20 +3,18 @@ title: "Módulo 8 - ESS6 bienestar subjetivo Tarea 1"
 author: "Mónica Pachón Basallo"
 date: "2026-07-28"
 output:
-  pdf_document: default
-  html_document:
+  pdf_document:
     toc: true
-    toc_float: true
     number_sections: true
-    theme: cosmo
 ---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
   warning = FALSE,
   message = FALSE,
-  fig.width = 8,
-  fig.height = 6,
+  fig.width = 6,
+  fig.height = 4,
+  out.width = "90%",
   fig.align = "center"
 )
 ```
@@ -34,12 +32,13 @@ library(purrr)
 library(stringr)
 ```
 
+
 # Importación de datos
 
 Se carga la base original del ESS6 y se realizan algunas comprobaciones iniciales de estructura.
 
 ```{r}
-estudio <- read_csv("Datos/ESS6e02_7.csv", show_col_types = FALSE)
+estudio <- read_csv("../Datos/ESS6e02_7.csv", show_col_types = FALSE)
 
 class(estudio)
 dim(estudio)
@@ -135,7 +134,7 @@ df_dep <- estudio %>%
            ~ replace(.x, .x %in% c(77, 88, 99), NA_real_))
   )
 
-write_csv(df_dep, "Datos/depurada/estudio_depurado.csv", na = "")
+write_csv(df_dep, "../Datos//depurada/estudio_depurado.csv", na = "")
 ```
 
 # 5. Recodificación para análisis e interpretación
@@ -320,7 +319,7 @@ resumen_num <- lapply(vars_num, function(v) {
 }) %>% bind_rows()
 
 resumen_num
-write.csv(resumen_num, "Datos/depurada/tarea1_resumen_numericas.csv", row.names = FALSE)
+write.csv(resumen_num, "../Datos/depurada/tarea1_resumen_numericas.csv", row.names = FALSE)
 ```
 
 # 8. Resumen de variables categóricas
@@ -339,7 +338,7 @@ resumen_cat <- lapply(vars_cat, function(v) {
 }) %>% bind_rows()
 
 resumen_cat
-write.csv(resumen_cat, "Datos/depurada/tarea1_resumen_categoricas.csv", row.names = FALSE)
+write.csv(resumen_cat, "../Datos//depurada/tarea1_resumen_categoricas.csv", row.names = FALSE)
 ```
 
 ## 9.1 Configuración gráfica
@@ -362,7 +361,7 @@ theme_set(
     )
 )
 
-dir.create("Datos/depurada", recursive = TRUE, showWarnings = FALSE)
+dir.create("../Datos//depurada", recursive = TRUE, showWarnings = FALSE)
 dir.create("Graficos", recursive = TRUE, showWarnings = FALSE)
 ```
 
@@ -461,8 +460,8 @@ resumen_cat <- lapply(vars_cat, function(v) {
   )
 }) %>% bind_rows()
 
-write.csv(resumen_num, "Datos/depurada/tarea1_resumen_numericas.csv", row.names = FALSE)
-write.csv(resumen_cat, "Datos/depurada/tarea1_resumen_categoricas.csv", row.names = FALSE)
+write.csv(resumen_num, "../Datos//depurada/tarea1_resumen_numericas.csv", row.names = FALSE)
+write.csv(resumen_cat, "../Datos//depurada/tarea1_resumen_categoricas.csv", row.names = FALSE)
 ```
 
 ```{r}
