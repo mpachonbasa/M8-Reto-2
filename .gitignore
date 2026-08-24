@@ -9,4 +9,4 @@ Datos/*.zip
 .RData
 
 # Resultados grandes
-*.html
+*.nb.html
