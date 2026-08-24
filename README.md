@@ -34,30 +34,39 @@ Analizar cómo distintos factores sociales, educativos y económicos se relacion
 
 ### Estructura del repositorio
 
+### Estructura del repositorio
+
 ```text
 Dashboard/
-├── dashboard.Rmd
+└── dashboard.Rmd
 
 Datos/
-├── Datos originales
-├── Datos depurados
+├── ESS6e02_7.csv
+├── estudio_depurado.csv
+└── depurada/
+    ├── base_final_reto2.csv
+    ├── estudio_recodificado.csv
+    ├── tarea1_resumen_categoricas.csv
+    ├── tarea1_resumen_numericas.csv
+    ├── tarea1_frecuencias_categoricas.csv
+    ├── tarea1_resumen_continuas.csv
+    └── tablas auxiliares y resúmenes del análisis exploratorio
 
 Graficos/
-├── Visualizaciones generadas durante el análisis
+└── Visualizaciones generadas durante el análisis
 
 Informes/
-├── Informe técnico (.Rmd)
-├── Informe técnico (.html)
-├── Anexo de código Tarea 1 (.pdf)
+├── informe_tecnico.Rmd
+├── informe_tecnico.html
+└── Reto1M8.pdf
 
 Presentación/
-├── Presentación (.Rmd)
-├── Presentación (.html)
+├── presentacion_reto2.Rmd
+└── presentacion_reto2.html
 
 Scripts/
 ├── Limpieza_Datos_Reto2.R
-├── Código para Reto 1 M8.Rmd
+└── Código para Reto 1 M8.Rmd
 
 README.md
-
-
+```
