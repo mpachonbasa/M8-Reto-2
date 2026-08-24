@@ -370,7 +370,7 @@ Las variables familiares y sociodemográficas muestran asociaciones más moderad
 
 En conjunto, estos resultados justifican la estructura analítica adoptada en el dashboard interactivo, que prioriza ingresos y educación como variables explicativas principales e incorpora filtros sociodemográficos para facilitar la exploración de patrones específicos.
 
-Los resultados obtenidos son coherentes con los patrones identificados durante la Tarea 1 y sirvieron como base para la selección de variables, filtros y visualizaciones incorporadas posteriormente en el dashboard interactivo.
+Los resultados obtenidos son coherentes con los patrones identificados durante el Reto 1 y sirvieron como base para la selección de variables, filtros y visualizaciones incorporadas posteriormente en el dashboard interactivo.
 
 El proyecto demuestra cómo un proceso reproducible de preparación, análisis y visualización de datos puede contribuir a comprender mejor las desigualdades en bienestar subjetivo presentes en la población europea.
 ``

@@ -27,29 +27,39 @@ df <- read_csv(
 
 - Proyecto basado en la European Social Survey (ESS6).
 - Se analizan distintas dimensiones del bienestar subjetivo.
-- El objetivo es estudiar la relación entre bienestar, ingresos, educación y características sociodemográficas.
+- Se estudian las desigualdades sociales asociadas al bienestar.
+- El análisis permitió identificar los principales factores explicativos y diseñar un dashboard interactivo para su exploración.
 
 ## Objetivos
 
-**Objetivo general**
+### Objetivo general
 
-Analizar la relación entre factores sociodemográficos, familiares y económicos y el bienestar subjetivo de la población europea.
+Analizar cómo distintos factores sociales, educativos y económicos se relacionan con el bienestar subjetivo en Europa.
 
-**Objetivos específicos**
+### Objetivos específicos
 
-- Describir los niveles de bienestar.
-- Analizar diferencias según ingresos.
-- Analizar diferencias según educación.
-- Comparar grupos sociales.
-- Identificar factores asociados al bienestar.
+- Identificar los principales determinantes del bienestar.
+- Comparar perfiles de bienestar entre grupos sociales.
+- Seleccionar variables relevantes para el dashboard.
+- Comunicar resultados mediante herramientas reproducibles.
 
 ## Descripción de la muestra
 
 - Base de datos: European Social Survey (ESS6).
-- Cobertura: 29 países europeos.
-- Más de 50.000 participantes.
-- Variable principal: felicidad subjetiva (0-10).
-- Indicadores complementarios: salud, dirección vital, libertad para decidir, relaciones sociales, apoyo íntimo y tiempo propio.
+- Participantes: **`r format(nrow(df), big.mark = ".")`**
+- Países: 29.
+- Edad media: **`r round(mean(df$agea, na.rm = TRUE),1)`** años.
+- Felicidad media: **`r round(mean(df$happy, na.rm = TRUE),2)`** puntos sobre 10.
+
+### Indicadores analizados
+
+- Felicidad
+- Salud percibida
+- Dirección vital
+- Libertad para decidir
+- Relaciones sociales
+- Apoyo íntimo
+- Tiempo para uno mismo
 
 ## Distribución de felicidad
 
@@ -69,9 +79,12 @@ ggplot(df, aes(x = happy)) +
   theme_minimal()
 ```
 
-## Bienestar según percepción económica
+## Principal hallazgo: ingresos y bienestar
 
-```{r}
+Los ingresos constituyen el principal factor asociado al bienestar subjetivo.
+``
+
+```{r, fig.width=8, fig.height=4}
 indicadores <- c(
   "happy",
   "health_num",
@@ -133,9 +146,11 @@ ggplot(
   )
 ```
 
-## Bienestar según nivel educativo
+## Hallazgo secundario: educación y bienestar
 
-```{r}
+Los niveles educativos más elevados presentan perfiles de bienestar más favorables.
+
+```{r, fig.width=8, fig.height=4}
 heatmap_educ <- df %>%
   filter(!is.na(eisced)) %>%
   group_by(eisced) %>%
@@ -179,9 +194,23 @@ ggplot(
   )
 ```
 
-## Conclusiones
+## Dashboard y conclusiones
 
-- Los ingresos muestran la asociación más fuerte con el bienestar subjetivo.
-- La educación presenta una relación positiva consistente.
-- Existen desigualdades sociales relevantes en distintas dimensiones del bienestar.
-- El dashboard desarrollado permite explorar estos patrones de forma reproducible e interactiva.
+### Diseño del dashboard
+
+Los resultados del análisis exploratorio mostraron que:
+
+- Los ingresos son el principal factor asociado al bienestar.
+- La educación constituye un segundo eje explicativo relevante.
+- Sexo, edad, hijos, pareja y divorcio aportan capacidad de segmentación.
+
+Por ello, el dashboard se construyó utilizando ingresos y educación como variables principales y el resto como filtros interactivos.
+
+La estructura del dashboard reproduce directamente los resultados obtenidos durante el análisis exploratorio del Reto 1, permitiendo explorar de forma interactiva los principales patrones identificados en los datos.
+
+### Conclusiones
+
+- La percepción económica del hogar muestra la asociación más fuerte con el bienestar subjetivo.
+- La educación presenta un gradiente positivo consistente.
+- Existen desigualdades sociales relevantes en múltiples dimensiones del bienestar.
+- El dashboard permite explorar estos patrones de forma reproducible e interactiva.
