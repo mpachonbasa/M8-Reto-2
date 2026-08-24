@@ -32,7 +32,16 @@ Analizar cómo distintos factores sociales, educativos y económicos se relacion
 - GitHub
 - ESS Round 6
 
-### Estructura del repositorio
+### Dashboard interactivo
+
+El dashboard ha sido desarrollado mediante Flexdashboard y Shiny.
+
+Para ejecutarlo:
+
+1. Abrir `Dashboard/dashboard.Rmd`.
+2. Ejecutar `Run Document` en Posit Cloud o RStudio.
+
+El dashboard permite explorar de forma interactiva los patrones de bienestar subjetivo identificados durante el análisis.
 
 ### Estructura del repositorio
 
