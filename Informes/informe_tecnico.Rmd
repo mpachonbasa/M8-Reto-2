@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
 
 La reproducibilidad constituye uno de los principios fundamentales de la ciencia de datos. Este proyecto utiliza datos de la European Social Survey (ESS Round 6) para analizar cómo diferentes factores sociodemográficos, familiares y económicos se relacionan con el bienestar subjetivo de la población europea.
 
-El análisis se centra en diversas dimensiones del bienestar, incluyendo felicidad, salud percibida, relaciones sociales, autonomía personal y sentido vital. Los datos han sido sometidos a un proceso reproducible de selección, limpieza y recodificación mediante scripts desarrollados en R.
+El análisis se centra en diversas dimensiones del bienestar, incluyendo felicidad, salud percibida, relaciones sociales, autonomía personal y sentido vital. A partir del análisis exploratorio realizado en la Tarea 1 se identificaron los factores con mayor capacidad explicativa y se definió la estructura del dashboard interactivo desarrollado en el proyecto.
 
 # Objetivos
 
@@ -32,11 +32,11 @@ Analizar la relación entre distintos factores sociodemográficos, familiares y 
 ## Objetivos específicos
 
 1. Describir los niveles de bienestar subjetivo de la muestra.
-2. Analizar la relación entre nivel educativo y bienestar subjetivo.
-3. Analizar la relación entre percepción de ingresos y bienestar subjetivo.
-4. Comparar indicadores de bienestar entre distintos grupos sociales.
-5. Identificar las variables de mayor interés para el desarrollo del dashboard final.
-6. Generar productos reproducibles para comunicar resultados.
+2. Identificar las variables con mayor asociación con el bienestar subjetivo.
+3. Comparar distintos perfiles de bienestar según características sociales y económicas.
+4. Determinar qué variables deben ocupar un papel central en el dashboard.
+5. Desarrollar productos reproducibles para la comunicación de resultados.
+
 
 # Datos y metodología
 
@@ -48,9 +48,11 @@ Para el desarrollo del proyecto se llevaron a cabo las siguientes tareas:
 - Tratamiento de valores perdidos.
 - Recodificación de variables categóricas y ordinales.
 - Construcción de indicadores auxiliares para el análisis.
-- Elaboración de productos reproducibles mediante R Markdown.
+- Análisis exploratorio de datos (EDA).
+- Desarrollo de un dashboard interactivo.
+- Generación de productos reproducibles mediante R Markdown.
 
-La base utilizada en este informe procede del script de limpieza y preparación de datos desarrollado para el proyecto y constituye la fuente común utilizada posteriormente en el dashboard y la presentación final.
+La misma base de datos depurada se ha utilizado en todas las fases del proyecto, garantizando la coherencia entre el análisis exploratorio, el dashboard y los documentos de comunicación.
 
 # Carga de datos
 
@@ -75,9 +77,25 @@ La edad media observada es de **`r round(mean(df$agea, na.rm = TRUE),1)`** años
 
 La felicidad media registrada es de **`r round(mean(df$happy, na.rm = TRUE),2)`** puntos sobre una escala de 0 a 10.
 
+La puntuación media de felicidad observada en la muestra es de **`r round(mean(df$happy, na.rm = TRUE),2)`** puntos sobre 10, lo que indica niveles relativamente elevados de bienestar subjetivo entre los participantes de la encuesta.
+
+# Hallazgo principal del proyecto
+
+El análisis exploratorio realizado durante la Tarea 1 permitió identificar un patrón muy claro en los datos: las diferencias más importantes en bienestar subjetivo aparecen asociadas principalmente a dos factores estructurales:
+
+- La percepción de ingresos del hogar.
+- El nivel educativo.
+
+En prácticamente todas las dimensiones analizadas, las personas que perciben una situación económica más favorable y aquellas con niveles educativos más elevados presentan mayores niveles de felicidad, mejor salud percibida, una valoración más positiva de su vida y mayores niveles de autonomía personal.
+
+Por el contrario, variables como sexo, convivencia en pareja, presencia de hijos o antecedentes de divorcio muestran diferencias más moderadas y se utilizan principalmente como variables de segmentación dentro del dashboard interactivo.
+
 # Estadísticos descriptivos de felicidad
 
-La felicidad constituye el principal indicador sintético de bienestar subjetivo utilizado en este estudio.
+
+La felicidad constituye el indicador sintético principal de bienestar utilizado en el proyecto. No obstante, el análisis no se limita a esta dimensión, sino que incorpora otros indicadores relacionados con la salud percibida, la integración social, la autonomía personal y el sentido vital.
+
+Por este motivo, las visualizaciones desarrolladas permiten analizar perfiles multidimensionales de bienestar en lugar de una única variable aislada.
 
 ```{r}
 resumen_happy <- df %>%
@@ -98,16 +116,7 @@ kable(
 
 Los resultados muestran niveles relativamente elevados de bienestar subjetivo en la muestra analizada.
 
-# Principales hallazgos del análisis exploratorio
 
-El análisis exploratorio realizado en la Tarea 1 permitió identificar cuáles son los factores más estrechamente asociados con las distintas dimensiones del bienestar subjetivo.
-
-Los resultados muestran que las diferencias más consistentes aparecen asociadas a dos variables principales:
-
-- La percepción de ingresos del hogar.
-- El nivel educativo.
-
-Por el contrario, variables como el sexo, la presencia de hijos en el hogar o los antecedentes de divorcio muestran diferencias más moderadas y resultan especialmente útiles como mecanismos de segmentación y filtrado.
 
 # Bienestar subjetivo y situación económica
 
@@ -133,9 +142,15 @@ kable(
 )
 ```
 
-# Perfil de bienestar según percepción económica
+La categoría con mayor bienestar corresponde a los participantes que declaran una situación económica más favorable, mientras que los niveles más bajos aparecen entre quienes manifiestan mayores dificultades económicas.
 
-La siguiente visualización resume simultáneamente distintas dimensiones del bienestar subjetivo y permite observar el gradiente asociado a la percepción económica del hogar.
+# Principal resultado del proyecto
+
+La percepción económica del hogar constituye el principal eje de desigualdad observado en los datos.
+
+La siguiente visualización resume simultáneamente distintas dimensiones del bienestar subjetivo y permite observar cómo cambian los perfiles de bienestar a medida que mejora la percepción económica de los ingresos del hogar.
+
+Este resultado fue determinante para el diseño del dashboard final, donde la situación económica se incorpora como una de las variables explicativas principales.
 
 ```{r}
 vars_bienestar <- c(
@@ -287,6 +302,10 @@ ggplot(
   )
 ```
 
+Los resultados observados para educación refuerzan los patrones detectados para la situación económica.
+
+En general, los niveles educativos más altos presentan perfiles de bienestar más favorables en la mayoría de dimensiones analizadas. La consistencia de este gradiente educativo explica que el nivel educativo se haya incorporado como una de las variables centrales del dashboard y como uno de los principales mecanismos de comparación entre grupos.
+
 # Variables contextuales consideradas
 
 Además de la educación y la situación económica, el análisis exploró diversas variables sociodemográficas y familiares.
@@ -302,11 +321,20 @@ Además de la educación y la situación económica, el análisis exploró diver
 
 Las diferencias más relevantes se concentran en los ejes económico y educativo. Las variables familiares y sociodemográficas aportan información complementaria y enriquecen la interpretación de los resultados.
 
-# Variables seleccionadas para el dashboard
+# Justificación del dashboard
 
-A partir de los resultados obtenidos durante el análisis exploratorio se seleccionaron las variables que constituirán la base del dashboard interactivo.
+El dashboard desarrollado en este proyecto se construye directamente a partir de los resultados obtenidos durante el análisis exploratorio.
 
-## Indicadores de bienestar
+Los hallazgos permitieron identificar dos grandes ejes explicativos del bienestar subjetivo:
+
+- La percepción de ingresos del hogar.
+- El nivel educativo.
+
+Por esta razón, ambas variables se utilizan como mecanismos principales de comparación dentro de la visualización interactiva.
+
+Además, el análisis mostró que variables como sexo, edad, convivencia en pareja, presencia de hijos y antecedentes de divorcio aportan contexto adicional y permiten explorar diferencias entre subgrupos específicos. Estas variables se incorporan principalmente como filtros y herramientas de segmentación.
+
+## Indicadores de bienestar representados
 
 - Felicidad global.
 - Salud percibida.
@@ -321,7 +349,7 @@ A partir de los resultados obtenidos durante el análisis exploratorio se selecc
 - Percepción de ingresos del hogar.
 - Nivel educativo.
 
-## Variables de filtrado y segmentación
+## Variables de segmentación y filtrado
 
 - Sexo.
 - Edad.
@@ -332,12 +360,17 @@ A partir de los resultados obtenidos durante el análisis exploratorio se selecc
 
 # Conclusiones
 
-El análisis exploratorio confirma la existencia de desigualdades significativas en bienestar subjetivo asociadas a factores socioeconómicos.
+El análisis realizado sobre los datos de la European Social Survey (ESS6) confirma la existencia de desigualdades relevantes en bienestar subjetivo asociadas principalmente a factores socioeconómicos y educativos.
 
-La percepción de ingresos del hogar constituye el factor más estrechamente relacionado con las diferencias observadas en felicidad, salud percibida, autonomía personal y propósito vital.
+La percepción de ingresos del hogar constituye el factor más estrechamente relacionado con las diferencias observadas en felicidad, salud percibida, autonomía personal, relaciones sociales y sentido vital. Las personas que perciben una situación económica favorable muestran sistemáticamente perfiles de bienestar más positivos.
 
-El nivel educativo presenta asimismo un gradiente positivo consistente en la mayoría de indicadores analizados.
+El nivel educativo presenta asimismo un gradiente positivo consistente y se configura como el segundo eje explicativo más importante del análisis.
 
-Las variables familiares y sociodemográficas muestran asociaciones más moderadas y se consideran especialmente útiles como mecanismos de segmentación y exploración complementaria.
+Las variables familiares y sociodemográficas muestran asociaciones más moderadas. Aunque no explican gran parte de las diferencias observadas, sí aportan contexto y permiten explorar cómo se manifiestan las desigualdades de bienestar en distintos grupos de población.
 
-Los resultados obtenidos proporcionan una base sólida para el desarrollo del dashboard del proyecto, orientado a explorar desigualdades en bienestar subjetivo mediante herramientas de visualización reproducible.
+En conjunto, estos resultados justifican la estructura analítica adoptada en el dashboard interactivo, que prioriza ingresos y educación como variables explicativas principales e incorpora filtros sociodemográficos para facilitar la exploración de patrones específicos.
+
+Los resultados obtenidos son coherentes con los patrones identificados durante la Tarea 1 y sirvieron como base para la selección de variables, filtros y visualizaciones incorporadas posteriormente en el dashboard interactivo.
+
+El proyecto demuestra cómo un proceso reproducible de preparación, análisis y visualización de datos puede contribuir a comprender mejor las desigualdades en bienestar subjetivo presentes en la población europea.
+``
